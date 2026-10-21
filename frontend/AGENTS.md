@@ -17,8 +17,7 @@ is not part of this workspace.
 
 ## Commands
 
-Package manager is **bun** (`bun.lock` is the lockfile; `package-lock.json`
-is stale — ignore it).
+Package manager is **bun** (`bun.lock` is the only lockfile).
 
 - `bun run dev` / `bun run build` / `bun run start`
 - `bun run lint` — ESLint (flat config, next core-web-vitals + typescript)
@@ -50,9 +49,11 @@ extra non-hierarchical role used to ban users.
 - Drizzle schema is **generated from Better Auth** into `auth-schema.ts`
   (`user`, `session`, `account`, `verification`); `schemas/index.ts` just
   re-exports it. `drizzle/` holds committed migrations.
-- `DB_FILE_NAME` in `.env` points at `mydb.sqlite` (committed).
+- `DB_FILE_NAME` in `.env` points at `mydb.sqlite`, which is **gitignored**.
+  A fresh checkout has no database: run `bun run db:push` then
+  `bun run scripts:create-admin` to create one.
 - Env vars: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DB_FILE_NAME`,
-  `ADMIN_EMAIL`, `ADMIN_PASSWORD`. `.env` is committed despite `.gitignore`.
+  `ADMIN_EMAIL`, `ADMIN_PASSWORD`. `.env` is gitignored and never committed.
 
 ## UI conventions
 
@@ -68,5 +69,3 @@ extra non-hierarchical role used to ban users.
 ## Config
 
 - `CLAUDE.md` re-exports this file via `@AGENTS.md`.
-- `.junie/plans/*.md` documents the feature history (auth flow, RBAC,
-  revoke flow, lensbot) — useful context when picking up work.
