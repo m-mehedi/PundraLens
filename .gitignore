@@ -1,0 +1,27 @@
+# Dependencies (frontend/ has its own; this catches root-level installs)
+node_modules/
+.pnpm-store/
+
+# Local databases and secrets
+*.sqlite
+*.sqlite-journal
+*.db
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Next.js / TypeScript
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Tooling
+.DS_Store
+*.log

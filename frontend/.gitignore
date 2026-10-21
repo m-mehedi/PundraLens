@@ -30,6 +30,11 @@ pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local database (recreate with `bun run db:push` + `bun run scripts:create-admin`)
+*.sqlite
+*.sqlite-journal
 
 # vercel
 .vercel
