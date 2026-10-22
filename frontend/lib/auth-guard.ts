@@ -1,14 +1,14 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+import { auth } from "@/lib/auth"
 
-export type Role = "student" | "staff" | "admin";
+export type Role = "student" | "staff" | "admin"
 
 export const ROLE_WEIGHTS: Record<Role, number> = {
   student: 1,
   staff: 2,
   admin: 3,
-};
+}
 
 /**
  * Checks if the current user meets or exceeds the minimum required role.
@@ -19,23 +19,23 @@ export const ROLE_WEIGHTS: Record<Role, number> = {
 export async function requireRole(minimumRole: Role) {
   const session = await auth.api.getSession({
     headers: await headers(),
-  });
+  })
 
   if (!session) {
-    redirect("/login");
+    redirect("/login")
   }
 
-  const userRole = (session.user as { role?: Role }).role;
+  const userRole = (session.user as { role?: Role }).role
   if (!userRole || !(userRole in ROLE_WEIGHTS)) {
-    redirect("/unauthorized");
+    redirect("/unauthorized")
   }
 
-  const userWeight = ROLE_WEIGHTS[userRole as Role];
-  const requiredWeight = ROLE_WEIGHTS[minimumRole];
+  const userWeight = ROLE_WEIGHTS[userRole as Role]
+  const requiredWeight = ROLE_WEIGHTS[minimumRole]
 
   if (userWeight < requiredWeight) {
-    redirect("/unauthorized");
+    redirect("/unauthorized")
   }
 
-  return session;
+  return session
 }

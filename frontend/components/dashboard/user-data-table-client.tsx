@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { UserDataTable, UserDataTableProps } from "./user-data-table"
+import { getDisplayId } from "@/lib/user-id"
 
 interface UserDataTableClientProps extends Omit<UserDataTableProps, "users"> {
   users: { id: string; name: string; email: string; role?: string }[]
@@ -26,6 +27,7 @@ export function UserDataTableClient({
     const query = searchQuery.toLowerCase().trim()
     return users.filter(
       (user) =>
+        getDisplayId(user.email).toLowerCase().includes(query) ||
         user.id.toLowerCase().includes(query) ||
         (user.name && user.name.toLowerCase().includes(query))
     )

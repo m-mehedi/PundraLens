@@ -37,14 +37,30 @@ const navItems = [
 ]
 
 const adminItems = [
-  { name: "Upload Notice", url: "/dashboard/upload-notice", icon: Upload01Icon },
-  { name: "Manage Notice", url: "/dashboard/manage-notice", icon: ListChecksIcon },
-  { name: "Manage Students", url: "/dashboard/manage-students", icon: GraduationCapIcon },
+  {
+    name: "Upload Notice",
+    url: "/dashboard/upload-notice",
+    icon: Upload01Icon,
+  },
+  {
+    name: "Manage Notice",
+    url: "/dashboard/manage-notice",
+    icon: ListChecksIcon,
+  },
+  {
+    name: "Manage Students",
+    url: "/dashboard/manage-students",
+    icon: GraduationCapIcon,
+  },
 ]
 
 const adminOnlyItems = [
   { name: "Manage Staffs", url: "/dashboard/manage-staffs", icon: UsersIcon },
-  { name: "Manage Revoked", url: "/dashboard/manage-revoked", icon: UserLock01Icon },
+  {
+    name: "Manage Revoked",
+    url: "/dashboard/manage-revoked",
+    icon: UserLock01Icon,
+  },
 ]
 
 type Role = "student" | "staff" | "admin"
@@ -81,7 +97,10 @@ export function SidebarNav({
                 <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton
                     render={<Link href={item.url} />}
-                    isActive={pathname === item.url}
+                    isActive={
+                      pathname === item.url ||
+                      pathname.startsWith(`${item.url}/`)
+                    }
                   >
                     <HugeiconsIcon icon={item.icon} />
                     <span>{item.name}</span>
@@ -101,7 +120,10 @@ export function SidebarNav({
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton
                       render={<Link href={item.url} />}
-                      isActive={pathname === item.url}
+                      isActive={
+                        pathname === item.url ||
+                        pathname.startsWith(`${item.url}/`)
+                      }
                     >
                       <HugeiconsIcon icon={item.icon} />
                       <span>{item.name}</span>
@@ -122,7 +144,10 @@ export function SidebarNav({
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton
                       render={<Link href={item.url} />}
-                      isActive={pathname === item.url}
+                      isActive={
+                        pathname === item.url ||
+                        pathname.startsWith(`${item.url}/`)
+                      }
                     >
                       <HugeiconsIcon icon={item.icon} />
                       <span>{item.name}</span>

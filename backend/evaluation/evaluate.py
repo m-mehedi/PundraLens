@@ -50,12 +50,19 @@ def compute_string_similarity(val1: Optional[str], val2: Optional[str]) -> float
     return fuzz.token_set_ratio(str(val1).strip().lower(), str(val2).strip().lower()) / 100.0
 
 
-def evaluate_benchmark(limit: Optional[int] = None) -> EvaluationResults:
+def evaluate_benchmark(
+    limit: Optional[int] = None, model: Optional[str] = None
+) -> EvaluationResults:
     """Run full evaluation suite over the benchmark dataset.
 
     For each benchmark notice, runs the LLM extraction pipeline on the
     ground_truth_text and compares the extracted fields against the known
     ground truth values using fuzzy matching.
+
+    Args:
+        limit: How many benchmark notices to evaluate.
+        model: Catalogue key of the model to evaluate (defaults to the
+            default model). See `pipeline.llm.MODEL_CATALOG`.
     """
     from pipeline.extract import extract_notice
 
@@ -90,7 +97,7 @@ def evaluate_benchmark(limit: Optional[int] = None) -> EvaluationResults:
 
         # 2. Run the actual extraction pipeline
         try:
-            extracted = extract_notice(gt_text)
+            extracted = extract_notice(gt_text, model=model)
             ext_dict = extracted.model_dump()
         except Exception as e:
             logger.warning(f"Extraction failed for notice {item.get('id', '?')}: {e}")
@@ -352,13 +359,74 @@ def seed_database_with_benchmark() -> int:
     return count
 
 
+def compare_models(
+    model_keys: List[str], limit: Optional[int] = None
+) -> Dict[str, EvaluationResults]:
+    """Run the benchmark once per model so their outputs can be compared."""
+    from pipeline import llm
+
+    results: Dict[str, EvaluationResults] = {}
+    for key in model_keys:
+        resolved = key or llm.default_model().key
+        logger.info("Evaluating model %s", resolved)
+        results[resolved] = evaluate_benchmark(limit=limit, model=resolved)
+    return results
+
+
+def print_comparison(results: Dict[str, EvaluationResults]) -> None:
+    """Print a side-by-side accuracy table for several models."""
+    if not results:
+        print("No models evaluated.")
+        return
+
+    fields = list(next(iter(results.values())).field_accuracies.keys())
+
+    print("=== Model comparison ===")
+    header = f"{'field':<20}" + "".join(f"{key:<26}" for key in results)
+    print(header)
+    print("-" * len(header))
+
+    for field in fields:
+        row = f"{field:<20}"
+        for key in results:
+            row += f"{results[key].field_accuracies.get(field, 0.0):<26}"
+        print(row)
+
+    print("-" * len(header))
+    overall = f"{'OVERALL':<20}"
+    for key in results:
+        overall += f"{results[key].overall_extraction_accuracy:<26}"
+    print(overall)
+
+
 if __name__ == "__main__":
-    results = evaluate_benchmark()
-    print("=== PUB NoticeLens Evaluation Results ===")
-    print(f"Total Notices Evaluated: {results.total_notices}")
-    print(f"Mean Character Error Rate (CER): {results.mean_character_error_rate}")
-    print(f"OCR Character Accuracy: {results.ocr_accuracy_percentage}%")
-    print(f"Overall Field Extraction Accuracy: {results.overall_extraction_accuracy}%")
-    print("\nField Accuracies:")
-    for f, acc in results.field_accuracies.items():
-        print(f"  - {f}: {acc}%")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="NoticeLens evaluation suite")
+    parser.add_argument("--limit", type=int, default=None, help="How many notices to evaluate")
+    parser.add_argument(
+        "--models",
+        type=str,
+        default=None,
+        help="Comma separated catalogue keys to compare (default: the default model)",
+    )
+    args = parser.parse_args()
+
+    model_keys = (
+        [m.strip() for m in args.models.split(",") if m.strip()]
+        if args.models
+        else [None]
+    )
+
+    if len(model_keys) == 1 and model_keys[0] is None:
+        single = evaluate_benchmark(limit=args.limit)
+        print("=== PUB NoticeLens Evaluation Results ===")
+        print(f"Total Notices Evaluated: {single.total_notices}")
+        print(f"Mean Character Error Rate (CER): {single.mean_character_error_rate}")
+        print(f"OCR Character Accuracy: {single.ocr_accuracy_percentage}%")
+        print(f"Overall Field Extraction Accuracy: {single.overall_extraction_accuracy}%")
+        print("\nField Accuracies:")
+        for f, acc in single.field_accuracies.items():
+            print(f"  - {f}: {acc}%")
+    else:
+        print_comparison(compare_models(model_keys, limit=args.limit))

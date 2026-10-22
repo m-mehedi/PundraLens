@@ -1,11 +1,11 @@
-import { defineRelationsPart } from "drizzle-orm";
+import { defineRelationsPart } from "drizzle-orm"
 import {
   sqliteTable,
   text,
   integer,
   index,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/sqlite-core"
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -24,7 +24,7 @@ export const user = sqliteTable("user", {
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .$onUpdate(() => new Date())
     .notNull(),
-});
+})
 
 export const session = sqliteTable(
   "session",
@@ -43,8 +43,8 @@ export const session = sqliteTable(
       .references(() => user.id, { onDelete: "cascade" }),
     impersonatedBy: text("impersonated_by"),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
-);
+  (table) => [index("session_userId_idx").on(table.userId)]
+)
 
 export const account = sqliteTable(
   "account",
@@ -75,11 +75,11 @@ export const account = sqliteTable(
   (table) => [
     uniqueIndex("account_issuer_accountId_uidx").on(
       table.issuer,
-      table.accountId,
+      table.accountId
     ),
     index("account_userId_idx").on(table.userId),
-  ],
-);
+  ]
+)
 
 export const verification = sqliteTable(
   "verification",
@@ -93,8 +93,8 @@ export const verification = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
-);
+  (table) => [index("verification_identifier_idx").on(table.identifier)]
+)
 
 export const authRelations = defineRelationsPart(
   { user, session, account, verification },
@@ -121,5 +121,5 @@ export const authRelations = defineRelationsPart(
         to: r.user.id,
       }),
     },
-  }),
-);
+  })
+)

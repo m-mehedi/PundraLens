@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
+import { LLMStatusChip } from "@/components/dashboard/llm-status-chip"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 
 export default async function DashboardLayout({
@@ -39,10 +40,11 @@ export default async function DashboardLayout({
         <header className="flex h-14 items-center gap-4 border-b px-6">
           <SidebarTrigger />
           <h2 className="text-lg font-semibold">Dashboard</h2>
+          <div className="ml-auto">
+            <LLMStatusChip />
+          </div>
         </header>
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+        <main className="flex-1 p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )

@@ -1,7 +1,4 @@
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -11,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   AlertDialog,
@@ -21,6 +18,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
@@ -32,14 +30,22 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  AlertCircleIcon,
+  CheckmarkCircle01Icon,
+  CircleMinusIcon,
+} from "@hugeicons/core-free-icons"
+import { getDisplayId } from "@/lib/user-id"
 
 export type ActionType = "revoke" | "restore"
 
 export interface UserDataTableProps {
   users: { id: string; name: string; email: string; role?: string }[]
-  title?: string
   actionType: ActionType
-  emptyIcon: readonly (readonly [string, { readonly [key: string]: string | number }])[]
+  emptyIcon: readonly (readonly [
+    string,
+    { readonly [key: string]: string | number },
+  ])[]
   emptyTitle: string
   emptyDescription: string
   action: (formData: FormData) => Promise<void> | void
@@ -54,13 +60,16 @@ export interface UserDataTableProps {
 }
 
 function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  return parts
     .slice(0, 2)
-    .map((part) => part[0])
+    .map((part) => part[0]?.toUpperCase() ?? "")
     .join("")
-    .toUpperCase()
 }
+
+const bulkVerb = (actionType: ActionType) =>
+  actionType === "revoke" ? "revoke access" : "restore access"
 
 export function UserDataTable({
   users,
@@ -79,10 +88,11 @@ export function UserDataTable({
   actionLabel,
 }: UserDataTableProps) {
   const hasSelection = onToggleSelect != null && onSelectAll != null
+  const verb = bulkVerb(actionType)
 
   return (
-    <Card className="gap-0 overflow-hidden py-0">
-      <CardContent className="p-0">
+    <Card className="gap-0 py-0">
+      <CardContent className="px-0">
         {users.length === 0 ? (
           <Empty className="m-6 border border-dashed">
             <EmptyHeader>
@@ -94,88 +104,42 @@ export function UserDataTable({
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="overflow-x-auto">
-            {hasSelection && selectedCount !== undefined && selectedCount > 0 && (
-              <div className="flex items-center justify-between px-6 py-3 border-b bg-muted/40">
-                <span className="text-sm text-muted-foreground">
-                  {selectedCount} user{selectedCount !== 1 ? "s" : ""} selected
-                </span>
-                {bulkAction && (
-                  <AlertDialog>
-                    <AlertDialogTrigger
-                      className={buttonVariants({
-                        variant: "outline",
-                        size: "sm",
-                        className: "text-destructive hover:bg-destructive/10 hover:text-destructive",
-                      })}
-                    >
-                      {actionLabel || "Revoke access"}
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          {actionLabel || "Revoke access"}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to{" "}
-                          {actionLabel?.toLowerCase() || "revoke access"} for{" "}
-                          {selectedCount} selected user
-                          {selectedCount !== 1 ? "s" : ""}? This action may be
-                          irreversible.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <form action={bulkAction}>
-                          {Array.from(selectedIds || []).map((id) => (
-                            <input
-                              key={id}
-                              type="hidden"
-                              name="userIds"
-                              value={id}
-                            />
-                          ))}
-                          <AlertDialogAction
-                            type="submit"
-                            variant="destructive"
-                            size="sm"
-                          >
-                            {actionLabel || "Revoke access"}
-                          </AlertDialogAction>
-                        </form>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
-            )}
-            <Table>
-              <TableHeader>
-                <TableRow className="h-10">
-                  {hasSelection && (
-                    <TableHead className="w-[56px] hover:bg-transparent">
-                      <Checkbox
-                        checked={allSelected ?? false}
-                        onCheckedChange={onSelectAll}
-                        aria-label="Select all"
-                        aria-checked={someSelected ? "mixed" : (allSelected ?? false)}
-                      />
-                    </TableHead>
-                  )}
-                  <TableHead className="hover:bg-transparent">Name</TableHead>
-                  <TableHead className="w-[140px] text-center hover:bg-transparent">
-                    Actions
+          <Table>
+            <TableHeader>
+              <TableRow className="h-12">
+                {hasSelection && (
+                  <TableHead className="w-10 hover:bg-transparent">
+                    <Checkbox
+                      checked={allSelected ?? false}
+                      onCheckedChange={onSelectAll}
+                      aria-label="Select all"
+                      indeterminate={someSelected ?? false}
+                    />
                   </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} className="h-[56px]">
+                )}
+                <TableHead className="hover:bg-transparent">User</TableHead>
+                <TableHead className="w-[160px] hover:bg-transparent">
+                  ID
+                </TableHead>
+                <TableHead className="w-[160px] text-center hover:bg-transparent">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => {
+                const isSelected = selectedIds?.has(user.id) ?? false
+                return (
+                  <TableRow
+                    key={user.id}
+                    data-state={isSelected ? "selected" : undefined}
+                    className="h-14"
+                  >
                     {hasSelection && (
-                      <TableCell className="w-[56px]">
+                      <TableCell className="w-10">
                         <Checkbox
-                          checked={selectedIds?.has(user.id) ?? false}
-                          onCheckedChange={() => onToggleSelect(user.id)}
+                          checked={isSelected}
+                          onCheckedChange={() => onToggleSelect?.(user.id)}
                           aria-label={`Select ${user.name}`}
                         />
                       </TableCell>
@@ -187,24 +151,42 @@ export function UserDataTable({
                             {getInitials(user.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <p className="font-medium min-w-0 truncate">
-                          {user.name}
-                        </p>
+                        <p className="truncate font-medium">{user.name}</p>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">
+                        {getDisplayId(user.email)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-center">
                       {actionType === "revoke" ? (
                         <AlertDialog>
                           <AlertDialogTrigger
-                            className={buttonVariants({
-                              variant: "destructive",
-                              size: "sm",
-                            })}
-                          >
-                            Revoke access
-                          </AlertDialogTrigger>
+                            render={
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive"
+                                data-icon="inline-start"
+                              >
+                                <HugeiconsIcon
+                                  icon={CircleMinusIcon}
+                                  strokeWidth={2}
+                                />
+                                Revoke
+                              </Button>
+                            }
+                          />
                           <AlertDialogContent>
                             <AlertDialogHeader>
+                              <AlertDialogMedia>
+                                <HugeiconsIcon
+                                  icon={AlertCircleIcon}
+                                  strokeWidth={2}
+                                  className="size-5 text-destructive"
+                                />
+                              </AlertDialogMedia>
                               <AlertDialogTitle>Revoke access</AlertDialogTitle>
                               <AlertDialogDescription>
                                 Are you sure you want to revoke access for{" "}
@@ -234,19 +216,86 @@ export function UserDataTable({
                       ) : (
                         <form action={action}>
                           <input type="hidden" name="userId" value={user.id} />
-                          <Button type="submit" size="sm">
+                          <Button
+                            type="submit"
+                            size="sm"
+                            data-icon="inline-start"
+                          >
+                            <HugeiconsIcon
+                              icon={CheckmarkCircle01Icon}
+                              strokeWidth={2}
+                            />
                             Restore
                           </Button>
                         </form>
                       )}
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                )
+              })}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
+
+      {hasSelection && selectedCount !== undefined && selectedCount > 0 && (
+        <CardFooter className="flex items-center justify-between border-t px-6 py-3">
+          <span className="text-sm text-muted-foreground">
+            {selectedCount} of {users.length} selected
+          </span>
+          {bulkAction && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive"
+                    data-icon="inline-start"
+                  >
+                    <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} />
+                    {actionLabel ?? verb}
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogMedia>
+                    <HugeiconsIcon
+                      icon={AlertCircleIcon}
+                      strokeWidth={2}
+                      className="size-5 text-destructive"
+                    />
+                  </AlertDialogMedia>
+                  <AlertDialogTitle>{actionLabel ?? verb}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to{" "}
+                    {actionLabel?.toLowerCase() || verb} for {selectedCount}{" "}
+                    selected user
+                    {selectedCount !== 1 ? "s" : ""}? This action may be
+                    irreversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <form action={bulkAction}>
+                    {Array.from(selectedIds || []).map((id) => (
+                      <input key={id} type="hidden" name="userIds" value={id} />
+                    ))}
+                    <AlertDialogAction
+                      type="submit"
+                      variant="destructive"
+                      size="sm"
+                    >
+                      {actionLabel ?? verb}
+                    </AlertDialogAction>
+                  </form>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </CardFooter>
+      )}
     </Card>
   )
 }

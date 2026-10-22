@@ -42,15 +42,14 @@ export default async function RevokedPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle>Account Revoked</CardTitle>
-          <CardDescription>
-            Your access has been suspended
-          </CardDescription>
+          <CardDescription>Your access has been suspended</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Alert variant="destructive">
             <AlertTitle>Access Denied</AlertTitle>
             <AlertDescription>
-              Your account got revoked. Please contact the administration for more information.
+              Your account got revoked. Please contact the administration for
+              more information.
             </AlertDescription>
           </Alert>
           <form action={signOut}>

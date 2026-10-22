@@ -93,16 +93,28 @@ Then refactor all functions to use `with db_connection() as conn:`.
 - Validate MIME type using `python-magic` or by checking file headers (magic bytes) in addition to extension.
 - Apply the same limits in `ui.py` using `st.file_uploader(max_files=1, type=[...])` and a post-upload size check.
 
-### H3. Gemini Model Name May Be Invalid
+### H3. Gemini Model Name May Be Invalid — RESOLVED (keep the model, fix the response parsing)
 
 **Files:** `pipeline/extract.py`, `pipeline/ocr.py`, `pipeline/qa.py` (line 132)
 
-**Problem:** The code references `gemini-3.8-flash` across multiple files. This model name may not exist; current models are `gemini-2.0-flash` or `gemini-2.5-flash`.
+**Problem (resolved):** The code references `gemini-3.8-flash` across multiple files. This model name may not exist; current models are `gemini-2.0-flash` or `gemini-2.5-flash`.
 
-**Fix:**
-- Verify the correct model name against the Google AI API documentation.
-- Replace `gemini-3.8-flash` with the correct model name (likely `gemini-2.5-flash` or `gemini-2.0-flash`).
-- Consider making the model name configurable via environment variable (`GEMINI_MODEL`) instead of hardcoding.
+**Status:** `gemini-3.8-flash` is real and shipped — `langchain_google_genai/data/_profiles.py`
+lists it as a GA model (released 2026-09-02) with image + structured-output support, and the
+API returns HTTP 200 for it. Do **not** downgrade the model.
+
+**What actually broke:** Gemini 3+ models reply with a list of content blocks instead of a
+plain string, so `AIMessage.content` is a list. `pipeline/ocr.py` used to call
+`response.content.strip()`, which raises `AttributeError: 'list' object has no attribute
+'strip'` for every request.
+
+**Fix (applied):**
+- `pipeline/ocr.py` now uses `response.text.strip()` — LangChain's accessor flattens text
+  blocks and skips reasoning ("thinking") blocks.
+- The model name is already configurable via `GEMINI_MODEL` (read in `ocr.py`, `extract.py`,
+  `qa.py`, surfaced by `/api/health`).
+- `pipeline/extract.py` and `pipeline/qa.py` are unaffected: they use
+  `with_structured_output(..., method="json_schema")` and never read `.content`.
 
 ### H4. Broken Import in `qa.py`
 

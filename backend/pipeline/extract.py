@@ -1,42 +1,19 @@
-"""LLM extraction — send OCR text to Google Gemini via LangChain for structured extraction."""
+"""LLM extraction — send OCR text to the configured LLM for structured extraction.
+
+The model is picked from the catalogue in `pipeline.llm`; see
+`MODEL_CATALOG` for the available models.
+"""
 
 from __future__ import annotations
 
 import logging
-import os
-from typing import TYPE_CHECKING
+from typing import Any, Dict, Optional
 
+from pipeline import llm
 from pipeline.bangla_date import parse_bangla_date_to_iso
 from pipeline.models import NoticeExtract
 
-if TYPE_CHECKING:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-
 logger = logging.getLogger(__name__)
-
-# Module-level client cache
-_client: "ChatGoogleGenerativeAI | None" = None
-
-
-def _get_client() -> "ChatGoogleGenerativeAI":
-    """Get or create the Google Gemini chat client via LangChain (cached)."""
-    global _client
-    if _client is None:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            raise EnvironmentError(
-                "GOOGLE_API_KEY environment variable is not set. "
-                "Get one at https://aistudio.google.com/apikey"
-            )
-        _client = ChatGoogleGenerativeAI(
-            model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
-            api_key=api_key,
-            temperature=0.1,
-        )
-        logger.info("Google Gemini client initialized (%s)", os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"))
-    return _client
 
 
 SYSTEM_PROMPT = """You are an expert document analyzer specializing in Bengali and English university notices.
@@ -69,25 +46,31 @@ Output JSON schema:
 """
 
 
-def extract_notice(ocr_text: str) -> NoticeExtract:
+def extract_notice(
+    ocr_text: str, model: Optional[str] = None
+) -> NoticeExtract:
     """Send *ocr_text* to the LLM and return a validated NoticeExtract model.
 
+    Args:
+        ocr_text: The OCR text of the notice.
+        model: Catalogue key of the model to use (defaults to the default
+            model). Unknown keys raise `pipeline.llm.UnknownModelError`.
+
     Reads API credentials from environment variables:
-    - GOOGLE_API_KEY (required)
+    - GROQ_API_KEY or GOOGLE_API_KEY, depending on the model's provider.
     """
-    chat_model = _get_client()
+    spec = llm.get_model(model)
+    client = llm.get_chat_client(spec)
 
-    # Use LangChain's structured output to get typed results directly
-    structured_llm = chat_model.with_structured_output(NoticeExtract, method="json_schema")
-
-    result = structured_llm.invoke(
+    data: Dict[str, Any] = llm.invoke_structured(
+        client,
+        spec,
+        NoticeExtract,
         [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": ocr_text},
-        ]
+        ],
     )
-
-    data = result if isinstance(result, dict) else result.model_dump()
 
     # Post-process dates deterministically if LLM left them in Bangla
     if data.get("date_of_issue"):

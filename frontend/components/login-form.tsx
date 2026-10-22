@@ -44,15 +44,18 @@ export function LoginForm({
     setError(null)
     try {
       const email = studentIdToEmail(studentId)
-      await authClient.signIn.email({
-        email,
-        password,
-        callbackURL: "/dashboard",
-      }, {
-        onSuccess: () => {
-          window.location.href = "/dashboard"
+      await authClient.signIn.email(
+        {
+          email,
+          password,
+          callbackURL: "/dashboard",
         },
-      })
+        {
+          onSuccess: () => {
+            window.location.href = "/dashboard"
+          },
+        }
+      )
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to sign in"
       setError(message)
@@ -67,13 +70,10 @@ export function LoginForm({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
-
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
-
-
               <Field>
                 <FieldLabel htmlFor="email">Enter your ID</FieldLabel>
                 <Input
@@ -90,7 +90,7 @@ export function LoginForm({
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <a
                     href="#"
-                    className="ml-auto text-sm  text-white/20 hover:text-white underline-offset-4 hover:underline"
+                    className="ml-auto text-sm text-white/20 underline-offset-4 hover:text-white hover:underline"
                   >
                     Forgot your password?
                   </a>
@@ -106,7 +106,7 @@ export function LoginForm({
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>

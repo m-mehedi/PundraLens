@@ -7,11 +7,11 @@ Cites the source notice ID, title, and exact matching passages.
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from storage.db import list_notices
+from pipeline import llm
 from pipeline.models import NoticeRecord
 
 logger = logging.getLogger(__name__)
@@ -63,14 +63,9 @@ def answer_question(
     query: str,
     department: Optional[str] = None,
     batch: Optional[str] = None,
+    model: Optional[str] = None,
 ) -> QAResponse:
     """Answer a student's question strictly grounded on published notices."""
-    from langchain_google_genai import ChatGoogleGenerativeAI
-
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        raise EnvironmentError("GOOGLE_API_KEY environment variable is not set.")
-
     # Fetch only published notices
     published = list_notices(status="published")
     if not published:
@@ -129,16 +124,17 @@ USER QUESTION:
 
 Extract the accurate answer with citations from the notices above."""
 
-    llm = ChatGoogleGenerativeAI(
-        model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
-        api_key=api_key,
-        temperature=0.0,
+    spec = llm.get_model(model)
+    client = llm.get_chat_client(spec)
+
+    data = llm.invoke_structured(
+        client,
+        spec,
+        QAResponse,
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
     )
 
-    structured_llm = llm.with_structured_output(QAResponse, method="json_schema")
-    res = structured_llm.invoke([
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ])
-
-    return QAResponse(**(res if isinstance(res, dict) else res.model_dump()))
+    return QAResponse(**data)

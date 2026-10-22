@@ -9,6 +9,7 @@ dependencies = [
     "capybara-docsaid>=0.12.0",
     "datalab-python-sdk",
     "langchain-google-genai",
+    "langchain-groq>=1.1.3",
     "Pillow",
     "pydantic",
     "streamlit>=1.66.0",

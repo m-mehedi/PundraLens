@@ -1,12 +1,12 @@
-import { betterAuth } from "better-auth/minimal";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
-import { admin } from "better-auth/plugins";
-import {db} from "@/db"
+import { betterAuth } from "better-auth/minimal"
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2"
+import { admin } from "better-auth/plugins"
+import { db } from "@/db"
 
-import * as schema from '@/auth-schema'
+import * as schema from "@/auth-schema"
 export const auth = betterAuth({
   emailAndPassword: {
-    enabled: true
+    enabled: true,
   },
   user: {
     additionalFields: {
@@ -20,7 +20,7 @@ export const auth = betterAuth({
   },
   plugins: [admin()],
   database: drizzleAdapter(db, {
-      provider: "sqlite",
-      schema: schema
-    }),
-});
+    provider: "sqlite",
+    schema: schema,
+  }),
+})

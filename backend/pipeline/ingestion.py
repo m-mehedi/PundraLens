@@ -16,8 +16,11 @@ from typing import List, Optional, Tuple
 
 import pymupdf
 from PIL import Image
+from PIL import ImageOps
 
+from pipeline.align import Point
 from pipeline.align import align_image
+from pipeline.align import warp_with_corners
 from pipeline.ocr import run_ocr_on_image
 from pipeline.preprocess import binarize_for_ocr, enhance_and_denoise_image
 
@@ -38,6 +41,7 @@ def process_document(
     filename: Optional[str] = None,
     plain_text: Optional[str] = None,
     is_handwritten: bool = False,
+    corners: Optional[List[Point]] = None,
 ) -> IngestionResult:
     """Ingest a notice from file bytes (PDF, Image) or plain text.
 
@@ -46,6 +50,8 @@ def process_document(
         filename: Original filename (used to infer type).
         plain_text: Raw plain text if user pasted text.
         is_handwritten: Hint if notice is handwritten (prioritizes Gemini Vision OCR).
+        corners: Optional list of 4 corner points (TL, TR, BR, BL) for manual perspective correction.
+                 Only supported for image inputs, not PDFs.
 
     Returns:
         IngestionResult with extracted raw text, source type, and preview images.
@@ -68,20 +74,32 @@ def process_document(
     # Case 2: PDF Document
     if filename_lower.endswith(".pdf") or file_bytes[:4] == b"%PDF":
         logger.info("Processing PDF document")
-        return _process_pdf(file_bytes, is_handwritten=is_handwritten)
+        return _process_pdf(file_bytes, is_handwritten=is_handwritten, corners=corners)
 
     # Case 3: Image (Photo of printed/handwritten notice, scan)
     logger.info("Processing image document")
-    return _process_image(file_bytes, is_handwritten=is_handwritten)
+    return _process_image(file_bytes, is_handwritten=is_handwritten, corners=corners)
 
 
-def _process_image(image_bytes: bytes, is_handwritten: bool = False) -> IngestionResult:
+def _process_image(
+    image_bytes: bytes,
+    is_handwritten: bool = False,
+    corners: Optional[List[Point]] = None,
+) -> IngestionResult:
     """Process an image file through alignment, preprocessing, and OCR."""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     logger.info(f"Loaded image size: {image.size}")
 
+    # Apply EXIF transpose to correct orientation
+    image = ImageOps.exif_transpose(image)
+
     # Stage 1: Document alignment (deskew / crop)
-    aligned = align_image(image)
+    if corners is not None:
+        if len(corners) != 4:
+            raise ValueError(f"Expected exactly 4 corners, got {len(corners)}")
+        aligned = warp_with_corners(image, corners)
+    else:
+        aligned = align_image(image)
 
     # Stage 2: Noise removal and contrast enhancement
     preprocessed = enhance_and_denoise_image(aligned)
@@ -100,8 +118,15 @@ def _process_image(image_bytes: bytes, is_handwritten: bool = False) -> Ingestio
     )
 
 
-def _process_pdf(pdf_bytes: bytes, is_handwritten: bool = False) -> IngestionResult:
+def _process_pdf(
+    pdf_bytes: bytes,
+    is_handwritten: bool = False,
+    corners: Optional[List[Point]] = None,
+) -> IngestionResult:
     """Process a PDF file — handles both digital PDFs and scanned PDFs."""
+    if corners is not None:
+        raise ValueError("Corners parameter not supported for PDF documents")
+
     doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
     num_pages = len(doc)
     logger.info(f"Opened PDF with {num_pages} page(s)")

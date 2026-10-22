@@ -89,9 +89,40 @@ uv sync
 ### 2. Configure Environment Variables
 Create or verify your `.env` file in the `backend/` directory:
 ```env
-GOOGLE_API_KEY="your-gemini-api-key"
-DATALAB_API_KEY="your-datalab-api-key"  # Optional, fallback to Gemini Vision OCR is automatic
+GROQ_API_KEY="your-groq-api-key"        # Used by the default extraction models
+GOOGLE_API_KEY="your-gemini-api-key"    # Only needed for the Gemini catalogue entry
+DATALAB_API_KEY="your-datalab-api-key"  # OCR engine
 ```
+
+### 2.1 LLM Model Catalogue
+The models available for extraction live in `pipeline/llm.py` (`MODEL_CATALOG`) —
+not in the environment. Each entry declares its provider, provider-side model id,
+temperature and capabilities.
+
+| Key | Model | Provider | Notes |
+| --- | --- | --- | --- |
+| `groq-qwen3.8-27b` | Qwen3.8 27B | Groq | Default. Best Bengali; preview model |
+| `groq-gpt-oss-120b` | GPT-OSS 120B | Groq | Guaranteed schema adherence |
+| `groq-gpt-oss-20b` | GPT-OSS 20B | Groq | Cheaper GPT-OSS |
+| `groq-llama-3.3-70b` | Llama 3.3 70B | Groq | JSON mode / tool calling only |
+| `gemini-3.8-flash` | Gemini 3.8 Flash | Google | Free tier is 20 requests/day |
+
+- `GET /api/models` returns the catalogue; `POST /api/extract` and `POST /api/qa`
+  accept a `model` parameter (catalogue key) so several models can be compared on
+  the same notice. Each entry carries an `available` flag — the Groq model list of
+  your account is fetched (and cached for 5 minutes) so entries your key cannot
+  run are marked as unavailable and disabled in the UI.
+- `model=custom:<provider>:<model_id>` runs a provider model that is not in the
+  catalogue yet.
+- Compare models against the benchmark set:
+  ```bash
+  uv run python -m evaluation.evaluate --models groq-qwen3.8-27b,groq-gpt-oss-120b --limit 5
+  ```
+
+### 2.2 OCR
+Datalab is the OCR engine. If every attempt fails, the request is retried after
+2s, 5s and 10s and then degrades to `"Not available right now"` instead of
+failing (`pipeline/ocr.py`).
 
 ### 3. Launch the Application
 Run the Streamlit interactive multi-role web portal:

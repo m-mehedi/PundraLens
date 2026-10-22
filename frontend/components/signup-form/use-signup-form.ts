@@ -39,7 +39,12 @@ function useSignupForm() {
   const passwordValue = watch("password")
 
   const handleNext = async () => {
-    const isValid = await trigger(["student_id", "department", "batch", "semester"])
+    const isValid = await trigger([
+      "student_id",
+      "department",
+      "batch",
+      "semester",
+    ])
     if (isValid) {
       setStep("password")
     }
@@ -50,18 +55,22 @@ function useSignupForm() {
     setError(null)
     try {
       const email = studentIdToEmail(data.student_id)
-      await authClient.signUp.email({
-        email,
-        password: data.password,
-        name: data.student_id,
-        callbackURL: "/dashboard",
-      }, {
-        onSuccess: () => {
-          window.location.href = "/dashboard"
+      await authClient.signUp.email(
+        {
+          email,
+          password: data.password,
+          name: data.student_id,
+          callbackURL: "/dashboard",
         },
-      })
+        {
+          onSuccess: () => {
+            window.location.href = "/dashboard"
+          },
+        }
+      )
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create account"
+      const message =
+        err instanceof Error ? err.message : "Failed to create account"
       setError(message)
       toast.error(message)
     } finally {
@@ -70,7 +79,12 @@ function useSignupForm() {
   }
 
   const onError = (errors: FieldErrors<SignupFormData>) => {
-    if (errors.student_id || errors.department || errors.batch || errors.semester) {
+    if (
+      errors.student_id ||
+      errors.department ||
+      errors.batch ||
+      errors.semester
+    ) {
       setStep("account")
     }
   }

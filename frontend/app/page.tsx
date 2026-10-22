@@ -61,25 +61,33 @@ const features = [
 
 export default function Page() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center px-6 py-24 text-center bg-gradient-to-b from-muted/50 to-background">
+      <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-muted/50 to-background px-6 py-24 text-center">
         <Badge variant="secondary" className="mb-4">
-          <HugeiconsIcon icon={BellIcon} className="size-3 mr-1" />
+          <HugeiconsIcon icon={BellIcon} className="mr-1 size-3" />
           Notice Management Made Simple
         </Badge>
         <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Welcome to{" "}
-          <span className="text-primary">PundraNoticeLens</span>
+          Welcome to <span className="text-primary">PundraNoticeLens</span>
         </h1>
         <p className="mt-6 max-w-xl text-lg text-muted-foreground">
           A modern platform for managing institutional notices. Stay connected
-          with announcements, manage content, and keep your community informed
-          — all in one place.
+          with announcements, manage content, and keep your community informed —
+          all in one place.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button size="lg" nativeButton={false} render={<Link href="/login">Log In</Link>} />
-          <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/signup">Sign Up</Link>} />
+          <Button
+            size="lg"
+            nativeButton={false}
+            render={<Link href="/login">Log In</Link>}
+          />
+          <Button
+            variant="outline"
+            size="lg"
+            nativeButton={false}
+            render={<Link href="/signup">Sign Up</Link>}
+          />
         </div>
       </section>
 
@@ -87,7 +95,7 @@ export default function Page() {
 
       {/* Features Section */}
       <section className="flex flex-col items-center px-6 py-20">
-        <div className="text-center mb-12">
+        <div className="mb-12 text-center">
           <Badge variant="outline" className="mb-3">
             Features
           </Badge>
@@ -100,7 +108,7 @@ export default function Page() {
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl w-full">
+        <div className="grid w-full max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
             <Card key={feature.title}>
               <CardHeader>
@@ -129,7 +137,9 @@ export default function Page() {
             PundraNoticeLens
           </span>
         </div>
-        <p>© {new Date().getFullYear()} PundraNoticeLens. All rights reserved.</p>
+        <p>
+          © {new Date().getFullYear()} PundraNoticeLens. All rights reserved.
+        </p>
       </footer>
     </div>
   )

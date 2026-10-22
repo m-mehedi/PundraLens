@@ -12,8 +12,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 PundraLens frontend — Next.js 16 (App Router) + React 19 + Tailwind v4 +
 shadcn/ui, Better Auth (email/password + admin plugin), Drizzle ORM over
-SQLite. Single app; git root is this `frontend/` dir. Sibling `../backend`
-is not part of this workspace.
+SQLite. Single app; git root is the **repo root** (one level up), which also
+contains `backend/`.
 
 ## Commands
 

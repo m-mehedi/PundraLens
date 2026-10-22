@@ -24,7 +24,9 @@ function PasswordField({
   show: boolean
   onToggle: () => void
   register: ReturnType<typeof useForm<SignupFormData>>["register"]
-  registerOptions: Parameters<ReturnType<typeof useForm<SignupFormData>>["register"]>[1]
+  registerOptions: Parameters<
+    ReturnType<typeof useForm<SignupFormData>>["register"]
+  >[1]
   error?: string
 }) {
   return (
@@ -34,13 +36,16 @@ function PasswordField({
         <Input
           id={id}
           type={show ? "text" : "password"}
-          className={cn("pr-10", error && "border-destructive focus-visible:ring-destructive")}
+          className={cn(
+            "pr-10",
+            error && "border-destructive focus-visible:ring-destructive"
+          )}
           {...register(name, registerOptions)}
         />
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>

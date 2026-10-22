@@ -31,8 +31,10 @@ export default async function ManageRevokedPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Manage Revoked Users</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Manage Revoked Users
+        </h1>
+        <p className="mt-1 text-muted-foreground">
           View and restore users who have been revoked.
         </p>
       </div>

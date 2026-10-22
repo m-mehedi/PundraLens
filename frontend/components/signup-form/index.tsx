@@ -59,23 +59,32 @@ export function SignupForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="w-full max-w-[420px] mx-auto">
+      <Card className="mx-auto w-full max-w-[420px]">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your PundraLens Account</CardTitle>
+          <CardTitle className="text-xl">
+            Create your PundraLens Account
+          </CardTitle>
           <CardDescription>
             Enter your details below to set up your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit, onError)}>
-            <Tabs value={step} onValueChange={(val) => setStep(val as SignupFormStep)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6" variant={"line"}>
+            <Tabs
+              value={step}
+              onValueChange={(val) => setStep(val as SignupFormStep)}
+              className="w-full"
+            >
+              <TabsList
+                className="mb-6 grid w-full grid-cols-2"
+                variant={"line"}
+              >
                 <TabsTrigger value="account">1. Account Details</TabsTrigger>
                 <TabsTrigger value="password">2. Security</TabsTrigger>
               </TabsList>
 
               <AnimatePresence mode="wait">
-                <FieldGroup >
+                <FieldGroup>
                   {/* STEP 1: Account Information */}
                   <TabsContent value="account" className="mt-0">
                     <motion.div
@@ -86,19 +95,28 @@ export function SignupForm({
                     >
                       <FieldGroup>
                         <Field>
-                          <FieldLabel htmlFor="student_id">Student ID</FieldLabel>
+                          <FieldLabel htmlFor="student_id">
+                            Student ID
+                          </FieldLabel>
                           <Input
                             id="student_id"
                             type="number"
                             placeholder="0322512101021"
-                            className={cn(errors.student_id && "border-destructive focus-visible:ring-destructive")}
-                            {...register("student_id", { required: "Student ID is required" })}
+                            className={cn(
+                              errors.student_id &&
+                                "border-destructive focus-visible:ring-destructive"
+                            )}
+                            {...register("student_id", {
+                              required: "Student ID is required",
+                            })}
                           />
                           <FieldError message={errors.student_id?.message} />
                         </Field>
 
                         <Field>
-                          <FieldLabel htmlFor="department">Department</FieldLabel>
+                          <FieldLabel htmlFor="department">
+                            Department
+                          </FieldLabel>
                           <Controller
                             control={control}
                             name="department"
@@ -111,7 +129,8 @@ export function SignupForm({
                                 <SelectTrigger
                                   id="department"
                                   className={cn(
-                                    errors.department && "border-destructive focus-visible:ring-destructive"
+                                    errors.department &&
+                                      "border-destructive focus-visible:ring-destructive"
                                   )}
                                 >
                                   <SelectValue placeholder="Select Department" />
@@ -136,8 +155,13 @@ export function SignupForm({
                               id="batch"
                               type="number"
                               placeholder="29"
-                              className={cn(errors.batch && "border-destructive focus-visible:ring-destructive")}
-                              {...register("batch", { required: "Batch is required" })}
+                              className={cn(
+                                errors.batch &&
+                                  "border-destructive focus-visible:ring-destructive"
+                              )}
+                              {...register("batch", {
+                                required: "Batch is required",
+                              })}
                             />
                             <FieldError message={errors.batch?.message} />
                           </Field>
@@ -147,8 +171,13 @@ export function SignupForm({
                               id="semester"
                               type="number"
                               placeholder="1"
-                              className={cn(errors.semester && "border-destructive focus-visible:ring-destructive")}
-                              {...register("semester", { required: "Semester is required" })}
+                              className={cn(
+                                errors.semester &&
+                                  "border-destructive focus-visible:ring-destructive"
+                              )}
+                              {...register("semester", {
+                                required: "Semester is required",
+                              })}
                             />
                             <FieldError message={errors.semester?.message} />
                           </Field>
@@ -156,7 +185,7 @@ export function SignupForm({
 
                         <Button
                           type="button"
-                          className="w-full mt-4"
+                          className="mt-4 w-full"
                           variant={"outline"}
                           onClick={handleNext}
                         >
@@ -184,7 +213,10 @@ export function SignupForm({
                           register={register}
                           registerOptions={{
                             required: "Password is required",
-                            minLength: { value: 8, message: "Must be at least 8 characters" },
+                            minLength: {
+                              value: 8,
+                              message: "Must be at least 8 characters",
+                            },
                           }}
                           error={errors.password?.message}
                         />
@@ -195,12 +227,15 @@ export function SignupForm({
                             id="confirm-password"
                             name="confirmPassword"
                             show={showConfirmPassword}
-                            onToggle={() => setShowConfirmPassword((prev) => !prev)}
+                            onToggle={() =>
+                              setShowConfirmPassword((prev) => !prev)
+                            }
                             register={register}
                             registerOptions={{
                               required: "Please confirm your password",
                               validate: (value) =>
-                                value === passwordValue || "Passwords do not match",
+                                value === passwordValue ||
+                                "Passwords do not match",
                             }}
                             error={errors.confirmPassword?.message}
                           />
@@ -210,14 +245,18 @@ export function SignupForm({
                         </Field>
 
                         <Field>
-                          <Button type="submit" disabled={isLoading} className="w-full">
-                            {isLoading ? "Creating Account..." : "Create Account"}
+                          <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full"
+                          >
+                            {isLoading
+                              ? "Creating Account..."
+                              : "Create Account"}
                           </Button>
                         </Field>
 
-                        {error && (
-                          <FieldError message={error} />
-                        )}
+                        {error && <FieldError message={error} />}
                       </FieldGroup>
                     </motion.div>
                   </TabsContent>
@@ -225,15 +264,19 @@ export function SignupForm({
               </AnimatePresence>
             </Tabs>
           </form>
-
-
         </CardContent>
       </Card>
 
       <FieldDescription className="px-6 text-center text-xs text-muted-foreground">
         By clicking continue, you agree to our{" "}
-        <a href="#" className="underline underline-offset-4">Terms of Service</a>{" "}
-        and <a href="#" className="underline underline-offset-4">Privacy Policy</a>.
+        <a href="#" className="underline underline-offset-4">
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a href="#" className="underline underline-offset-4">
+          Privacy Policy
+        </a>
+        .
       </FieldDescription>
     </div>
   )

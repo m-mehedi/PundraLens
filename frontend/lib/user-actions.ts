@@ -24,7 +24,11 @@ export async function revokeUser(formData: FormData) {
     redirect("/unauthorized")
   }
 
-  const targetUser = await db.select({ role: user.role }).from(user).where(eq(user.id, userId)).limit(1)
+  const targetUser = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
   const originalRole = targetUser[0]?.role ?? "student"
 
   await db.update(user).set({ originalRole }).where(eq(user.id, userId))
@@ -58,7 +62,11 @@ export async function restoreUser(formData: FormData) {
     redirect("/unauthorized")
   }
 
-  const targetUser = await db.select({ originalRole: user.originalRole }).from(user).where(eq(user.id, userId)).limit(1)
+  const targetUser = await db
+    .select({ originalRole: user.originalRole })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
   const roleToRestore = targetUser[0]?.originalRole ?? "student"
 
   await auth.api.setRole({
@@ -88,7 +96,11 @@ export async function bulkRevokeUsers(formData: FormData) {
   }
 
   for (const userId of userIds) {
-    const targetUser = await db.select({ role: user.role }).from(user).where(eq(user.id, userId)).limit(1)
+    const targetUser = await db
+      .select({ role: user.role })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1)
     const originalRole = targetUser[0]?.role ?? "student"
 
     await db.update(user).set({ originalRole }).where(eq(user.id, userId))
@@ -124,7 +136,11 @@ export async function bulkRestoreUsers(formData: FormData) {
   }
 
   for (const userId of userIds) {
-    const targetUser = await db.select({ originalRole: user.originalRole }).from(user).where(eq(user.id, userId)).limit(1)
+    const targetUser = await db
+      .select({ originalRole: user.originalRole })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1)
     const roleToRestore = targetUser[0]?.originalRole ?? "student"
 
     await auth.api.setRole({
