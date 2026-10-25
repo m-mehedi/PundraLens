@@ -1,0 +1,156 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "rpm_limit": 15,
+  "total_files": 29,
+  "succeeded": 29,
+  "failed": 0,
+  "skipped": 0,
+  "total_seconds": 283.54,
+  "files": [
+    {
+      "file": "1",
+      "status": "success",
+      "seconds": 8.82
+    },
+    {
+      "file": "10",
+      "status": "success",
+      "seconds": 4.01
+    },
+    {
+      "file": "11",
+      "status": "success",
+      "seconds": 7.58
+    },
+    {
+      "file": "12",
+      "status": "success",
+      "seconds": 7.64
+    },
+    {
+      "file": "13",
+      "status": "success",
+      "seconds": 10.16
+    },
+    {
+      "file": "14",
+      "status": "success",
+      "seconds": 8.95
+    },
+    {
+      "file": "15",
+      "status": "success",
+      "seconds": 5.71
+    },
+    {
+      "file": "16",
+      "status": "success",
+      "seconds": 7.41
+    },
+    {
+      "file": "17",
+      "status": "success",
+      "seconds": 4.16
+    },
+    {
+      "file": "18",
+      "status": "success",
+      "seconds": 15.08
+    },
+    {
+      "file": "19",
+      "status": "success",
+      "seconds": 4.05
+    },
+    {
+      "file": "2",
+      "status": "success",
+      "seconds": 8.54
+    },
+    {
+      "file": "20",
+      "status": "success",
+      "seconds": 7.96
+    },
+    {
+      "file": "21",
+      "status": "success",
+      "seconds": 5.6
+    },
+    {
+      "file": "22",
+      "status": "success",
+      "seconds": 7.09
+    },
+    {
+      "file": "23",
+      "status": "success",
+      "seconds": 6.4
+    },
+    {
+      "file": "24",
+      "status": "success",
+      "seconds": 8.02
+    },
+    {
+      "file": "25",
+      "status": "success",
+      "seconds": 4.1
+    },
+    {
+      "file": "26",
+      "status": "success",
+      "seconds": 10.72
+    },
+    {
+      "file": "27",
+      "status": "success",
+      "seconds": 5.73
+    },
+    {
+      "file": "28",
+      "status": "success",
+      "seconds": 2.69
+    },
+    {
+      "file": "29",
+      "status": "success",
+      "seconds": 2.64
+    },
+    {
+      "file": "3",
+      "status": "success",
+      "seconds": 3.47
+    },
+    {
+      "file": "4",
+      "status": "success",
+      "seconds": 2.9
+    },
+    {
+      "file": "5",
+      "status": "success",
+      "seconds": 1.38
+    },
+    {
+      "file": "6",
+      "status": "success",
+      "seconds": 1.57
+    },
+    {
+      "file": "7",
+      "status": "success",
+      "seconds": 1.69
+    },
+    {
+      "file": "8",
+      "status": "success",
+      "seconds": 1.6
+    },
+    {
+      "file": "9",
+      "status": "success",
+      "seconds": 1.88
+    }
+  ]
+}

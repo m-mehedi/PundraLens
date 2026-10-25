@@ -15,3 +15,18 @@ export function getDisplayId(email: string): string {
   if (at === -1) return email
   return email.slice(at) === STUDENT_EMAIL_DOMAIN ? email.slice(0, at) : email
 }
+
+/**
+ * Turns whatever the user typed on the login form into an email address.
+ *
+ * Students sign in with their Student ID, staff and administrators sign in
+ * with the email address the administrator created for them. Anything that
+ * already looks like an email is passed through untouched.
+ */
+export function resolveLoginIdentifier(input: string): string {
+  const value = input.trim()
+  if (value.includes("@")) {
+    return value.toLowerCase()
+  }
+  return studentIdToEmail(value)
+}

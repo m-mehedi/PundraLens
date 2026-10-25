@@ -1,29 +1,9 @@
-/** Mirrors the backend's `NoticeRecord` model (backend/pipeline/models.py). */
-
-export interface NoticeDeadline {
-  date: string
-  description: string
-}
-
-export interface NoticeEventDateTime {
-  date: string
-  time: string | null
-}
-
-export interface NoticeTargetStudents {
-  department: string | null
-  batch: string | null
-  semester: string | null
-}
-
-export interface NoticeFees {
-  amount: number
-  currency: string
-}
+/** Mirrors the service's `ExtractionSchema` (service/core/schema.py). */
 
 export type NoticeCategory =
   | "exam"
   | "registration"
+  | "admission"
   | "fee"
   | "holiday"
   | "event"
@@ -38,16 +18,18 @@ export interface NoticeRecord {
   title: string | null
   issuing_office: string | null
   date_of_issue: string | null
-  deadlines: NoticeDeadline[] | null
-  event_date_time: NoticeEventDateTime | null
-  venue: string | null
-  target_students: NoticeTargetStudents | null
-  required_action: string | null
-  fees: NoticeFees | null
-  contact: string | null
   category: NoticeCategory
-  summary_bengali: string | null
-  summary_english: string | null
+  deadline: string | null
+  event_date_and_time: string | null
+  venue: string | null
+  departments: string | null
+  batches: number[] | null
+  required_action: string | null
+  fees: string | null
+  contact: string | null
+  notice_no: string | null
+  notice_summary_bn: string | null
+  notice_summary_en: string | null
   raw_text: string | null
   source_type: string
   file_name: string | null
@@ -75,15 +57,17 @@ export interface NoticePatch {
   title?: string | null
   issuing_office?: string | null
   date_of_issue?: string | null
-  deadlines?: NoticeDeadline[] | null
-  event_date_time?: NoticeEventDateTime | null
+  deadline?: string | null
+  event_date_and_time?: string | null
   venue?: string | null
-  target_students?: NoticeTargetStudents | null
+  departments?: string | null
+  batches?: number[] | null
   required_action?: string | null
-  fees?: NoticeFees | null
+  fees?: string | null
   contact?: string | null
   category?: NoticeCategory
-  summary_bengali?: string | null
-  summary_english?: string | null
+  notice_no?: string | null
+  notice_summary_bn?: string | null
+  notice_summary_en?: string | null
   review_notes?: string | null
 }

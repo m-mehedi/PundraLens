@@ -37,8 +37,6 @@ import { Trace, TraceLine, TraceIcon, TraceTitle } from "@/components/ui/trace"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ModelPicker } from "@/components/model-picker"
-import { useModels } from "@/hooks/use-models"
 import { readErrorDetail } from "@/lib/backend-error"
 
 interface Citation {
@@ -75,9 +73,6 @@ function nextId() {
 }
 
 function Chat() {
-  const { models, defaultKey } = useModels()
-  const [selectedModel, setSelectedModel] = useState("")
-  const model = selectedModel || defaultKey
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isPending, setIsPending] = useState(false)
@@ -98,10 +93,10 @@ function Chat() {
     setIsPending(true)
 
     try {
-      const response = await fetch("/api/pipeline/qa", {
+      const response = await fetch("/api/lensbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(model ? { query, model } : { query }),
+        body: JSON.stringify({ query }),
       })
 
       if (!response.ok) {
@@ -155,14 +150,9 @@ function Chat() {
       className="flex min-h-0 flex-1 flex-col gap-3"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <ModelPicker
-          models={models}
-          value={model}
-          onChange={setSelectedModel}
-          label="Answering model"
-          id="qa-model"
-          className="w-72"
-        />
+        <p className="text-sm text-muted-foreground">
+          Answers are grounded in published notices and cited below.
+        </p>
         {messages.length > 0 && messages.at(-1)?.meta?.model ? (
           <Badge variant="secondary">
             {messages.at(-1)?.meta?.model?.label}
@@ -317,13 +307,7 @@ function Chat() {
 
 export default function Page() {
   return (
-    <div className="flex h-[85vh] min-h-0 flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">LensBot</h1>
-        <p className="text-muted-foreground">
-          Ask questions about notices, deadlines, and university announcements.
-        </p>
-      </div>
+    <div className="flex h-[85vh] min-h-0 flex-col">
       <Chat />
     </div>
   )

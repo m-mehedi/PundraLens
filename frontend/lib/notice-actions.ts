@@ -1,28 +1,15 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { headers } from "next/headers"
-import { redirect } from "next/navigation"
-import { auth } from "@/lib/auth"
+import { requireStaff } from "@/lib/auth-guard"
 import {
   createNotice,
   deleteNotice,
   publishNotice,
   updateNotice,
 } from "@/lib/backend-server"
+import { reindexNoticeById, unindexNotice } from "@/lib/lensbot/index-all"
 import type { NoticeCategory, NoticePatch } from "@/lib/notice-types"
-
-async function requireStaff() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session) {
-    redirect("/login")
-  }
-  const role = (session.user as { role?: string }).role
-  if (role !== "staff" && role !== "admin") {
-    redirect("/unauthorized")
-  }
-  return session
-}
 
 function revalidateNoticeViews() {
   revalidatePath("/dashboard")
@@ -35,27 +22,21 @@ export interface SaveNoticeInput {
   title?: string | null
   issuing_office?: string | null
   date_of_issue?: string | null
-  deadlines?: { date: string; description: string }[] | null
-  event_date_time?: { date: string; time: string | null } | null
+  deadline?: string | null
+  event_date_and_time?: string | null
   venue?: string | null
-  target_students?: {
-    department: string | null
-    batch: string | null
-    semester: string | null
-  } | null
+  departments?: string | null
+  batches?: number[] | null
   required_action?: string | null
-  fees?: { amount: number; currency: string } | null
+  fees?: string | null
   contact?: string | null
+  notice_no?: string | null
   category?: NoticeCategory
-  summary_bengali?: string | null
-  summary_english?: string | null
+  notice_summary_bn?: string | null
+  notice_summary_en?: string | null
   raw_text?: string | null
   file_name?: string | null
   source_type?: string
-  /** Department / batch / semester typed by the user, if any. */
-  department?: string
-  batch?: string
-  semester?: string
   /** Also publish right away. */
   publish?: boolean
 }
@@ -64,34 +45,25 @@ export async function saveNoticeAction(input: SaveNoticeInput): Promise<{
   id?: number
   error?: string
 }> {
-  const session = await requireStaff()
-
-  const department = input.department?.trim()
-  const batch = input.batch?.trim()
-  const semester = input.semester?.trim()
-  const hasAudience = Boolean(department || batch || semester)
+  const { session } = await requireStaff()
 
   try {
     const created = await createNotice({
       title: input.title ?? null,
       issuing_office: input.issuing_office ?? null,
       date_of_issue: input.date_of_issue ?? null,
-      deadlines: input.deadlines ?? null,
-      event_date_time: input.event_date_time ?? null,
+      deadline: input.deadline ?? null,
+      event_date_and_time: input.event_date_and_time ?? null,
       venue: input.venue ?? null,
-      target_students: hasAudience
-        ? {
-            department: department || null,
-            batch: batch || null,
-            semester: semester || null,
-          }
-        : (input.target_students ?? null),
+      departments: input.departments ?? null,
+      batches: input.batches ?? null,
       required_action: input.required_action ?? null,
       fees: input.fees ?? null,
       contact: input.contact ?? null,
+      notice_no: input.notice_no ?? null,
       category: input.category ?? "general",
-      summary_bengali: input.summary_bengali ?? "",
-      summary_english: input.summary_english ?? "",
+      notice_summary_bn: input.notice_summary_bn ?? "",
+      notice_summary_en: input.notice_summary_en ?? "",
       raw_text: input.raw_text ?? null,
       file_name: input.file_name ?? null,
       source_type: input.source_type ?? "photo",
@@ -107,12 +79,40 @@ export async function saveNoticeAction(input: SaveNoticeInput): Promise<{
       await publishNotice(created.id, publishedBy)
     }
 
+    await reindexNoticeById(created.id)
+
     revalidateNoticeViews()
     return { id: created.id }
   } catch (error) {
     return {
       error:
         error instanceof Error ? error.message : "Failed to save the notice",
+    }
+  }
+}
+
+/**
+ * Publishes a notice that is already saved as a draft, from the page the
+ * staff member is standing on.
+ */
+export async function publishSavedNoticeAction(
+  noticeId: number
+): Promise<{ error?: string }> {
+  const { session } = await requireStaff()
+  const publishedBy =
+    (session.user as { name?: string; email?: string }).name ||
+    (session.user as { email?: string }).email ||
+    "Staff Reviewer"
+
+  try {
+    await publishNotice(noticeId, publishedBy)
+    await reindexNoticeById(noticeId)
+    revalidateNoticeViews()
+    return {}
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to publish the notice",
     }
   }
 }
@@ -125,6 +125,7 @@ export async function publishNoticeAction(formData: FormData): Promise<void> {
   if (!Number.isFinite(id)) return
 
   await publishNotice(id, publishedBy)
+  await reindexNoticeById(id)
   revalidateNoticeViews()
 }
 
@@ -134,6 +135,7 @@ export async function deleteNoticeAction(formData: FormData): Promise<void> {
   if (!Number.isFinite(id)) return
 
   await deleteNotice(id)
+  await unindexNotice(id)
   revalidateNoticeViews()
 }
 
@@ -144,6 +146,7 @@ export async function updateNoticeAction(input: {
   await requireStaff()
   try {
     await updateNotice(input.id, input.patch)
+    await reindexNoticeById(input.id)
     revalidateNoticeViews()
     return {}
   } catch (error) {

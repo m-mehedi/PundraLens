@@ -30,40 +30,29 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { NavUser } from "./nav-user"
 
+import {
+  navItems as baseNavItems,
+  adminItems as baseAdminItems,
+  adminOnlyItems as baseAdminOnlyItems,
+} from "@/lib/dashboard-nav"
+import type { Role } from "@/lib/roles"
+
 const navItems = [
-  { name: "Overview", url: "/dashboard", icon: Home01Icon },
-  { name: "Notices", url: "/dashboard/notices", icon: DocumentAttachmentIcon },
-  { name: "LensBot", url: "/dashboard/lensbot", icon: AiBrain04Icon },
+  { ...baseNavItems[0], icon: Home01Icon },
+  { ...baseNavItems[1], icon: DocumentAttachmentIcon },
+  { ...baseNavItems[2], icon: AiBrain04Icon },
 ]
 
 const adminItems = [
-  {
-    name: "Upload Notice",
-    url: "/dashboard/upload-notice",
-    icon: Upload01Icon,
-  },
-  {
-    name: "Manage Notice",
-    url: "/dashboard/manage-notice",
-    icon: ListChecksIcon,
-  },
-  {
-    name: "Manage Students",
-    url: "/dashboard/manage-students",
-    icon: GraduationCapIcon,
-  },
+  { ...baseAdminItems[0], icon: Upload01Icon },
+  { ...baseAdminItems[1], icon: ListChecksIcon },
+  { ...baseAdminItems[2], icon: GraduationCapIcon },
 ]
 
 const adminOnlyItems = [
-  { name: "Manage Staffs", url: "/dashboard/manage-staffs", icon: UsersIcon },
-  {
-    name: "Manage Revoked",
-    url: "/dashboard/manage-revoked",
-    icon: UserLock01Icon,
-  },
+  { ...baseAdminOnlyItems[0], icon: UsersIcon },
+  { ...baseAdminOnlyItems[1], icon: UserLock01Icon },
 ]
-
-type Role = "student" | "staff" | "admin"
 
 export function SidebarNav({
   user,

@@ -16,6 +16,9 @@ English) → structured, citable notices (deadlines, fees, venues) plus grounded
   `frontend/` (it is auto-loaded when working there). `frontend/CLAUDE.md` re-exports it.
 - Backend background: `backend/README.md` (features, pipeline, roles) and
   `backend/PLAN.md` (remediation checklist — **partly stale**, see below).
+- `handover.md` — the **notice workbench** (the Upload Notice screen): the Edit
+  and Extract panels, the data model, the backend contract and the things that
+  will break it. Read it before touching `frontend/components/upload-notice/`.
 
 ## Commands
 
@@ -55,13 +58,15 @@ There is no frontend test suite. Verify frontend work with `typecheck` then `lin
   (`backend/pipeline/models.py:89`) makes **required**.
 - `test_benchmark_evaluation` — needs `GOOGLE_API_KEY`; it calls the live Gemini API.
 
-`bun run lint` → **12 problems (6 errors, 6 warnings)**
-- errors: `hooks/use-mobile.ts` (`react-hooks/set-state-in-effect`), `lib/user-actions.ts`
-  (4× `@typescript-eslint/no-explicit-any`).
-- warnings: `app/dashboard/layout.tsx`, `app/page.tsx`, `components/login-form.tsx`,
-  `components/signup-form/use-signup-form.ts`.
+`bun run lint` → **2 problems (1 error, 1 warning)**
+- error: `hooks/use-mobile.ts` (`react-hooks/set-state-in-effect`).
+- warning: `components/signup-form/use-signup-form.ts` (`react-hooks/incompatible-library`,
+  from `react-hook-form`'s `watch()`).
 
 `bun run typecheck` passes. Compare against these numbers before blaming your diff.
+Note: a stale `.next/types/validator.ts` from an older build can make `typecheck`
+report phantom errors about routes that no longer exist; `rm -rf .next/types`
+and re-run before investigating.
 
 Backend-suite side effects: it inserts then deletes a row in `backend/data/notices.db`
 (gitignored) and the TTS test hits the network.
@@ -74,12 +79,14 @@ Backend-suite side effects: it inserts then deletes a row in `backend/data/notic
   OCR fallback), `GEMINI_MODEL` (default `gemini-2.5-flash`), `API_KEY` (optional — when
   unset the API runs **open**; when set, protected routes require an `X-API-Key` header).
 - Frontend `.env`: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DB_FILE_NAME`,
-  `ADMIN_EMAIL`, `ADMIN_PASSWORD`. `DB_FILE_NAME` is used verbatim as a path relative to
+  `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (optional), `SEED_PASSWORD`.
+  `DB_FILE_NAME` is used verbatim as a path relative to
   `frontend/` (`frontend/db/index.ts`).
 - Both SQLite files are gitignored, so a fresh checkout has **no database**:
   backend creates `backend/data/notices.db` via `init_db()` on `api.py` import; frontend
   needs `bun run db:push` **then** `bun run scripts:create-admin` before the first login.
-  The checked-out `frontend/mydb.sqlite` is currently 0 bytes (schema not pushed).
+  Databases created before the role model was fixed also want
+  `bun run scripts:migrate-users` (see `frontend/AGENTS.md`).
 
 ## Backend gotchas
 
@@ -96,14 +103,18 @@ Backend-suite side effects: it inserts then deletes a row in `backend/data/notic
 
 ## Frontend gotchas
 
-- `requireRole()` (`lib/auth-guard.ts:19`) is **never imported**. Role checks are
-  inlined in `lib/user-actions.ts` and `app/dashboard/layout.tsx`, which only enforces
-  "logged in" + "not revoked".
-- There is **no `/unauthorized` route**, yet `lib/auth-guard.ts` and
-  `lib/user-actions.ts` redirect there → 404.
+- Roles live in `frontend/lib/roles.ts`; `requireRole` / `requireStaff` /
+  `requireAdmin` (`frontend/lib/auth-guard.ts`) are the only guards, used by every
+  dashboard page and server action. Route handlers use `apiSession()` instead.
+- `frontend/lib/auth.ts` **must** keep `admin({ defaultRole: "student", roles })`:
+  the admin plugin owns the `role` field, so without it self-signups land as `"user"`.
+- Login accepts a Student ID **or** an email (`resolveLoginIdentifier`). Signup is
+  students-only; staff accounts are created by an admin from Manage Staffs, admins by
+  `bun run scripts:create-admin`.
 - `auth-schema.ts` is the Drizzle schema and there is **no wired codegen script** — it is
-  maintained by hand (it carries `originalRole`, which is not a Better Auth field).
-  `drizzle/` holds the committed migrations.
+  maintained by hand (it carries `originalRole` and the profile columns, none of which are
+  Better Auth core fields). `drizzle/` holds the committed migrations, one folder each.
+- User avatar uploads go to `frontend/public/uploads/avatars/` (gitignored).
 - Prettier: no semicolons, double quotes, 80 columns; icons are **hugeicons**
   (`@hugeicons/react`), not lucide.
 

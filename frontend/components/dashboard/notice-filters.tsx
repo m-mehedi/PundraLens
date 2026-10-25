@@ -3,8 +3,15 @@
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon } from "@hugeicons/core-free-icons"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
@@ -12,25 +19,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { Category, Department } from "@/lib/notice-types"
+import { ALL_CATEGORIES } from "./category-badge"
+import type { Department } from "@/lib/notice-types"
 
 const ALL = "all"
 
+const STATUS_ITEMS: Record<string, React.ReactNode> = {
+  published: "Published",
+  draft: "Drafts",
+  archived: "Archived",
+  [ALL]: "All",
+}
+
+const CATEGORY_ITEMS: Record<string, React.ReactNode> = {
+  [ALL]: "All categories",
+  ...Object.fromEntries(ALL_CATEGORIES.map((item) => [item.value, item.label])),
+}
+
 export interface NoticeFiltersProps {
   departments: Department[]
-  categories: Category[]
   showStatus?: boolean
 }
 
 export function NoticeFilters({
   departments,
-  categories,
   showStatus = false,
 }: NoticeFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = React.useTransition()
+
+  const departmentItems = React.useMemo<Record<string, React.ReactNode>>(
+    () => ({
+      [ALL]: "All departments",
+      ...Object.fromEntries(departments.map((item) => [item.code, item.name])),
+    }),
+    [departments]
+  )
 
   const status = searchParams.get("status") ?? "published"
   const category = searchParams.get("category") ?? ALL
@@ -76,27 +102,41 @@ export function NoticeFilters({
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center">
-      <Input
-        type="search"
-        placeholder="Search notices…"
-        value={searchText}
-        onChange={(event) => setSearchText(event.target.value)}
-        className="md:max-w-xs"
-      />
+      <InputGroup className="md:max-w-xs">
+        <InputGroupAddon>
+          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
+        </InputGroupAddon>
+        <InputGroupInput
+          type="search"
+          placeholder="Search notices…"
+          aria-label="Search notices"
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+        />
+      </InputGroup>
 
       {showStatus ? (
         <Select
           value={status}
           onValueChange={(value) => update({ status: value ?? "" })}
+          items={STATUS_ITEMS}
         >
           <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="draft">Drafts</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-            <SelectItem value={ALL}>All</SelectItem>
+            <SelectItem value="published" label="Published">
+              Published
+            </SelectItem>
+            <SelectItem value="draft" label="Drafts">
+              Drafts
+            </SelectItem>
+            <SelectItem value="archived" label="Archived">
+              Archived
+            </SelectItem>
+            <SelectItem value={ALL} label="All">
+              All
+            </SelectItem>
           </SelectContent>
         </Select>
       ) : null}
@@ -104,16 +144,19 @@ export function NoticeFilters({
       <Select
         value={category}
         onValueChange={(value) => update({ category: value ?? "" })}
+        items={CATEGORY_ITEMS}
       >
         <SelectTrigger className="w-full md:w-48">
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All categories</SelectItem>
-          {categories.map((item) => (
-            <SelectItem key={item.name} value={item.name}>
-              {item.icon ? `${item.icon} ` : ""}
-              {item.display_name}
+          <SelectItem value={ALL} label="All categories">
+            All categories
+          </SelectItem>
+          {ALL_CATEGORIES.map((item) => (
+            <SelectItem key={item.value} value={item.value} label={item.label}>
+              <HugeiconsIcon icon={item.icon} className="mr-1 size-3" />
+              {item.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -122,14 +165,17 @@ export function NoticeFilters({
       <Select
         value={department}
         onValueChange={(value) => update({ department: value ?? "" })}
+        items={departmentItems}
       >
         <SelectTrigger className="w-full md:w-56">
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All departments</SelectItem>
+          <SelectItem value={ALL} label="All departments">
+            All departments
+          </SelectItem>
           {departments.map((item) => (
-            <SelectItem key={item.code} value={item.code}>
+            <SelectItem key={item.code} value={item.code} label={item.name}>
               {item.name}
             </SelectItem>
           ))}

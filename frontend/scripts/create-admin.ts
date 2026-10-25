@@ -29,7 +29,7 @@ async function main() {
   const user = await ctx.internalAdapter.createUser(
     {
       email,
-      name: email.split("@")[0],
+      name: process.env.ADMIN_NAME ?? email.split("@")[0],
       role: "admin",
       emailVerified: true,
     },

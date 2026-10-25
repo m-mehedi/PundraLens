@@ -1,6 +1,7 @@
 "use client"
 
-import { Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { useForm } from "react-hook-form"
 import { Input } from "@/components/ui/input"
@@ -46,8 +47,12 @@ function PasswordField({
           type="button"
           onClick={onToggle}
           className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          aria-label={show ? "Hide password" : "Show password"}
         >
-          {show ? <EyeOff size={16} /> : <Eye size={16} />}
+          <HugeiconsIcon
+            icon={show ? ViewOffIcon : ViewIcon}
+            className="size-4"
+          />
         </button>
       </div>
       <FieldError message={error} />

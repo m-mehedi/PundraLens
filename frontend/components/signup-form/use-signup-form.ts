@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useForm, FieldErrors } from "react-hook-form"
 import { SignupFormData, SignupFormStep } from "./types"
 import { authClient, studentIdToEmail } from "@/lib/auth-client"
 import { toast } from "sonner"
 
 function useSignupForm() {
+  const router = useRouter()
   const [step, setStep] = React.useState<SignupFormStep>("account")
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
@@ -15,10 +17,12 @@ function useSignupForm() {
 
   const form = useForm<SignupFormData>({
     defaultValues: {
+      name: "",
       student_id: "",
       department: "" as SignupFormData["department"],
       batch: "",
       semester: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -40,10 +44,12 @@ function useSignupForm() {
 
   const handleNext = async () => {
     const isValid = await trigger([
+      "name",
       "student_id",
       "department",
       "batch",
       "semester",
+      "phone",
     ])
     if (isValid) {
       setStep("password")
@@ -59,12 +65,17 @@ function useSignupForm() {
         {
           email,
           password: data.password,
-          name: data.student_id,
+          name: data.name,
+          phone: data.phone,
+          department: data.department,
+          batch: data.batch,
+          semester: data.semester,
           callbackURL: "/dashboard",
         },
         {
           onSuccess: () => {
-            window.location.href = "/dashboard"
+            router.push("/dashboard")
+            router.refresh()
           },
         }
       )
@@ -80,10 +91,12 @@ function useSignupForm() {
 
   const onError = (errors: FieldErrors<SignupFormData>) => {
     if (
+      errors.name ||
       errors.student_id ||
       errors.department ||
       errors.batch ||
-      errors.semester
+      errors.semester ||
+      errors.phone
     ) {
       setStep("account")
     }

@@ -65,7 +65,8 @@ export function SignupForm({
             Create your PundraLens Account
           </CardTitle>
           <CardDescription>
-            Enter your details below to set up your account
+            Register with your Student ID to track notices, deadlines and fees.
+            Staff and administrator accounts are created by an administrator.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -94,6 +95,27 @@ export function SignupForm({
                       transition={{ duration: 0.2 }}
                     >
                       <FieldGroup>
+                        <Field>
+                          <FieldLabel htmlFor="name">Full name</FieldLabel>
+                          <Input
+                            id="name"
+                            type="text"
+                            placeholder="e.g. Sinan Khan"
+                            className={cn(
+                              errors.name &&
+                                "border-destructive focus-visible:ring-destructive"
+                            )}
+                            {...register("name", {
+                              required: "Full name is required",
+                              minLength: {
+                                value: 2,
+                                message: "Must be at least 2 characters",
+                              },
+                            })}
+                          />
+                          <FieldError message={errors.name?.message} />
+                        </Field>
+
                         <Field>
                           <FieldLabel htmlFor="student_id">
                             Student ID
@@ -182,6 +204,28 @@ export function SignupForm({
                             <FieldError message={errors.semester?.message} />
                           </Field>
                         </div>
+
+                        <Field>
+                          <FieldLabel htmlFor="phone">
+                            Phone number (optional)
+                          </FieldLabel>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="+8801XXXXXXXXX"
+                            className={cn(
+                              errors.phone &&
+                                "border-destructive focus-visible:ring-destructive"
+                            )}
+                            {...register("phone", {
+                              pattern: {
+                                value: /^[0-9+\-\s()]{6,20}$/,
+                                message: "Enter a valid phone number",
+                              },
+                            })}
+                          />
+                          <FieldError message={errors.phone?.message} />
+                        </Field>
 
                         <Button
                           type="button"

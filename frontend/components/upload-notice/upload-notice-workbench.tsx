@@ -1,402 +1,488 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
-import {
-  Cropper,
-  type CropperRef,
-  type CropperState,
-} from "react-advanced-cropper"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Redo01Icon, Undo03Icon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
 
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { ModelPicker } from "@/components/model-picker"
-import { PolygonOverlay } from "./polygon-overlay"
-import { SaveNoticePanel } from "./save-notice-panel"
+import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import type { Department } from "@/lib/notice-types"
+
+import { CornerOverlay } from "./polygon-overlay"
+import { DraftRestorePrompt } from "./draft-restore-prompt"
+import { CropOverlay } from "./crop-overlay"
+import { EditorContextBar } from "./editor-context-bar"
+import { ExtractPanel } from "./extract-panel"
+import { MaskOverlay } from "./mask-overlay"
+import { NoticeCanvas, type NoticeCanvasHandle } from "./notice-canvas"
+import { PagePanel } from "./page-panel"
+import { TextEditor } from "./text-editor"
+import { ToolDock } from "./tool-dock"
+import { ToolOptions } from "./tool-options"
+import { UploadDropzone } from "./upload-dropzone"
+import { UploadProgressToast, useUploadProgress } from "./upload-progress"
 import { useUploadNotice } from "./use-upload-notice"
-import type { ExtractResult } from "./types"
-import "react-advanced-cropper/dist/style.css"
+import { deleteDraft, getDraftId, saveDraft, toDraft } from "@/lib/draft-store"
 
-const CORNER_LABELS = ["TL", "TR", "BR", "BL"] as const
-
-function formatValue(
-  key: keyof ExtractResult["data"],
-  value: ExtractResult["data"][keyof ExtractResult["data"]]
-): string {
-  if (value === null || value === undefined) return "—"
-  if (typeof value === "object") return JSON.stringify(value, null, 2)
-  return String(value)
+export interface UploadNoticeWorkbenchProps {
+  /** Seeded by the backend; empty when it cannot be reached. */
+  departments: Department[]
+  /** Who the work belongs to — the draft in the browser is theirs. */
+  userId: string
 }
 
-export function UploadNoticeWorkbench() {
+export function UploadNoticeWorkbench({
+  departments,
+  userId,
+}: UploadNoticeWorkbenchProps) {
   const {
-    input,
-    imageUrl,
+    mode,
+    documentName,
+    items,
+    activeId,
+    activeItem,
+    activeIndex,
+    preview,
     points,
     autoFilled,
-    imageWidth,
-    imageHeight,
+    ops,
+    tool,
+    setTool,
+    cropDraft,
+    setCrop,
+    cropAspect,
+    setCropAspect,
+    applyCrop,
+    cancelCrop,
+    maskShapes,
+    maskKind,
+    setMaskKind,
+    updateMaskShapes,
+    removeMaskShape,
+    clearMaskShapes,
+    applyMask,
+    text,
+    setText,
+    textName,
+    results,
+    activeResult,
+    activeResultId,
+    setActiveResultId,
+    isProcessing,
     isDetecting,
     isExtracting,
-    error,
-    result,
+    extractStartedAt,
+    extractProgress,
+    alignError,
+    extractError,
+    isResultStale,
     models,
     model,
     setModel,
-    handleFileSelect,
+    handleFiles,
+    appendFiles,
+    removeItem,
+    restoreDraft,
+    resetAll,
+    selectItem,
+    selectNext,
+    selectPrevious,
     handlePointChange,
+    detectCorners,
+    addFourCorners,
+    clearCorners,
+    addGrayscale,
+    addSharpen,
+    removeOp,
+    resetImage,
+    applyWarp,
+    refreshThumbnail,
     extractText,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    beginEdit,
   } = useUploadNotice()
 
-  const [activeTab, setActiveTab] = React.useState("photo")
-  const cropperRef = React.useRef<CropperRef | null>(null)
-  const [cropperState, setCropperState] = React.useState<CropperState | null>(
-    null
-  )
-  const [stencilRect, setStencilRect] = React.useState<{
-    left: number
-    top: number
-    width: number
-    height: number
-  } | null>(null)
-
-  // Jump to the Corners tab as soon as a detection round completes.
-  const wasDetecting = React.useRef(false)
-  React.useEffect(() => {
-    if (wasDetecting.current && !isDetecting && points.length === 4) {
-      setActiveTab("corners")
-    }
-    wasDetecting.current = isDetecting
-  }, [isDetecting, points.length])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleFileSelect(file)
-  }
-
-  const handleReDetect = () => {
-    if (input) handleFileSelect(input)
-  }
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success("Copied to clipboard")
-    } catch {
-      toast.error("Failed to copy")
-    }
-  }
+  const [activeTab, setActiveTab] = React.useState("edit")
+  const canvasRef = React.useRef<NoticeCanvasHandle | null>(null)
+  const [zoomPercent, setZoomPercent] = React.useState(100)
+  const [isComparing, setIsComparing] = React.useState(false)
 
   const detectedCount = points.filter((_, index) => !autoFilled[index]).length
 
-  const renderResultFields = (data: ExtractResult["data"]) => {
-    const fields: Array<[keyof ExtractResult["data"], string]> = [
-      ["title", "Title"],
-      ["issuing_office", "Issuing Office"],
-      ["date_of_issue", "Date of Issue"],
-      ["deadlines", "Deadlines"],
-      ["event_date_time", "Event Date/Time"],
-      ["venue", "Venue"],
-      ["target_students", "Target Students"],
-      ["required_action", "Required Action"],
-      ["fees", "Fees"],
-      ["contact", "Contact"],
-      ["category", "Category"],
-      ["summary_bengali", "Bengali Summary"],
-      ["summary_english", "English Summary"],
-    ]
+  // Move between pages with the arrow keys, the way every photo browser
+  // does it. Typing in a field is left alone.
+  React.useEffect(() => {
+    if (items.length < 2) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault()
+        selectNext()
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault()
+        selectPrevious()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [items.length, selectNext, selectPrevious])
 
-    return (
-      <dl className="grid gap-4 md:grid-cols-2">
-        {fields.map(([key, label]) => (
-          <div key={key} className="flex flex-col gap-1">
-            <dt className="text-sm font-medium text-muted-foreground">
-              {label}
-            </dt>
-            <dd className="font-mono text-sm break-words whitespace-pre-wrap text-foreground/80">
-              {formatValue(key, data[key])}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    )
-  }
+  // Undo and redo work wherever the cursor is, as long as it is not in a
+  // field: ⌘Z on a Mac, Ctrl+Z everywhere else.
+  React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+      if (!event.metaKey && !event.ctrlKey) return
+      const key = event.key.toLowerCase()
+      if (key === "z") {
+        event.preventDefault()
+        if (event.shiftKey) {
+          redo()
+        } else {
+          undo()
+        }
+        return
+      }
+      if (key === "y") {
+        event.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [undo, redo])
+
+  // While the files are being read, a toast in the corner says how far
+  // along it is — the toast itself watches the progress, so it is published
+  // once and not for every file.
+  const uploadProgress = useUploadProgress()
+  const isUploading = uploadProgress !== null
+  React.useEffect(() => {
+    if (!isUploading) return
+    const id = toast.custom((toastId) => <UploadProgressToast id={toastId} />, {
+      duration: Infinity,
+      unstyled: true,
+    })
+    return () => {
+      toast.dismiss(id)
+    }
+  }, [isUploading])
+
+  const isTextMode = mode === "text"
+  const hasPages = items.length > 0
+
+  // The draft id identifies this piece of work in this browser.
+  const [draftId] = React.useState(() => getDraftId())
+
+  // Keep the unsaved work in the browser, so a refresh does not lose it.
+  React.useEffect(() => {
+    if (!userId) return
+    if (items.length === 0 && !text) return
+    const timer = setTimeout(() => {
+      const { doc, files } = toDraft(userId, draftId, {
+        mode,
+        documentName,
+        text,
+        textName,
+        items,
+      })
+      void saveDraft(doc, files).catch(() => {
+        // A full disk or a private window — the work simply is not kept.
+      })
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [userId, draftId, mode, documentName, text, textName, items])
 
   return (
-    <div className={cn("flex flex-col gap-6")}>
+    <>
+      <DraftRestorePrompt
+        userId={userId}
+        draftId={draftId}
+        onLoad={(draft) => void restoreDraft(draft)}
+      />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList variant="line" className="grid w-full grid-cols-3">
-          <TabsTrigger value="photo">Photo</TabsTrigger>
-          <TabsTrigger value="corners">Corners</TabsTrigger>
-          <TabsTrigger value="result">Result</TabsTrigger>
+        <TabsList variant="line" className="grid w-full grid-cols-2">
+          <TabsTrigger value="edit">Edit</TabsTrigger>
+          <TabsTrigger value="extract">
+            Extract
+            {isResultStale ? (
+              <span
+                className="size-1.5 rounded-full bg-destructive"
+                aria-label="The photo changed after the last extraction"
+              />
+            ) : null}
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="photo" className="mt-6 flex flex-col gap-4">
-          <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-border p-8">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="sr-only"
-              id="file-upload"
-              disabled={isDetecting}
-            />
-            <label
-              htmlFor="file-upload"
-              className="flex cursor-pointer flex-col items-center gap-2 text-center"
-            >
-              <p className="text-lg font-medium">
-                {input ? "Image loaded" : "Drop an image or click to select"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {input ? "Drag and drop to replace" : "PNG, JPG up to 10MB"}
-              </p>
-            </label>
-            {input && (
-              <Button
-                variant="outline"
-                onClick={handleReDetect}
-                disabled={isDetecting}
-                className="mt-2"
-              >
-                {isDetecting ? "Detecting..." : "Re-detect"}
-              </Button>
-            )}
-          </div>
-
-          {imageUrl && (
-            <div className="relative aspect-video max-h-96 overflow-hidden rounded-xl bg-muted">
-              <Image
-                src={imageUrl}
-                alt="Uploaded notice"
-                fill
-                unoptimized
-                className="object-contain"
+        <TabsContent value="edit" className="mt-6 flex flex-col gap-4">
+          {isTextMode ? (
+            <div className="flex flex-col gap-3">
+              <TextEditor
+                value={text}
+                onChange={setText}
+                fileName={textName}
+                disabled={isExtracting}
               />
+              <div>
+                <button
+                  type="button"
+                  onClick={resetAll}
+                  className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  Open a photo or PDF instead
+                </button>
+              </div>
             </div>
-          )}
-
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
-        </TabsContent>
-
-        <TabsContent value="corners" className="mt-6 flex flex-col gap-4">
-          {imageUrl ? (
-            <div className="flex flex-col gap-6 lg:flex-row">
-              <Card className="min-w-0 flex-1">
-                <CardContent className="p-0">
-                  <div className="relative">
-                    <Cropper
-                      ref={cropperRef}
-                      src={imageUrl}
-                      className="cropper h-[70vh] min-h-[500px] w-full"
-                      checkOrientation
-                      stencilProps={{
-                        // The crop rectangle is unused — only the four detected
-                        // corners are sent to the backend. Hide its border,
-                        // handles and the dimming mask so only the polygon
-                        // overlay remains.
-                        boundingBoxClassName: "hidden",
-                        overlayClassName: "hidden",
-                        movable: false,
-                        resizable: false,
-                      }}
-                      onUpdate={(cropper) => {
-                        setCropperState(cropper.getState())
-                        setStencilRect(cropper.getStencilCoordinates())
-                      }}
-                    />
-                    <PolygonOverlay
-                      points={points}
-                      onChange={handlePointChange}
-                      imageWidth={imageWidth}
-                      imageHeight={imageHeight}
-                      state={cropperState}
-                      stencilRect={stencilRect}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="w-full shrink-0 lg:w-72">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Corners
-                    <Badge variant="secondary">
-                      {detectedCount} of 4 detected
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  {points.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                      Click &quot;Re-detect&quot; on the Photo tab or adjust
-                      manually
-                    </p>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {points.map((point, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between gap-2 text-sm"
+          ) : !hasPages ? (
+            <UploadDropzone onFiles={handleFiles} />
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <ToolDock tool={tool} onToolChange={setTool} />
+                  <Separator orientation="vertical" className="h-6" />
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={undo}
+                          disabled={!canUndo}
+                          aria-label="Undo"
                         >
-                          <span className="w-10 font-medium">
-                            {CORNER_LABELS[index]}
-                          </span>
-                          <span className="font-mono text-muted-foreground">
-                            {point.x.toFixed(2)}, {point.y.toFixed(2)}
-                          </span>
-                          {autoFilled[index] ? (
-                            <Badge variant="outline">added — check it</Badge>
+                          <HugeiconsIcon icon={Undo03Icon} />
+                        </Button>
+                      }
+                    />
+                    <TooltipContent>
+                      Undo · <kbd data-slot="kbd">⌘Z</kbd> or{" "}
+                      <kbd data-slot="kbd">Ctrl Z</kbd>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={redo}
+                          disabled={!canRedo}
+                          aria-label="Redo"
+                        >
+                          <HugeiconsIcon icon={Redo01Icon} />
+                        </Button>
+                      }
+                    />
+                    <TooltipContent>
+                      Redo · <kbd data-slot="kbd">⇧⌘Z</kbd> or{" "}
+                      <kbd data-slot="kbd">Ctrl Y</kbd>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <EditorContextBar
+                  position={activeIndex + 1}
+                  total={items.length}
+                  zoom={zoomPercent}
+                  onZoomIn={() => canvasRef.current?.zoomIn()}
+                  onZoomOut={() => canvasRef.current?.zoomOut()}
+                  onFit={() => canvasRef.current?.fit()}
+                  onCompareStart={() => setIsComparing(true)}
+                  onCompareEnd={() => setIsComparing(false)}
+                  canCompare={Boolean(activeItem?.sourceUrl)}
+                  isComparing={isComparing}
+                  onResetPage={resetImage}
+                  canResetPage={ops.length > 0}
+                />
+              </div>
+
+              <ToolOptions
+                tool={tool}
+                points={points}
+                autoFilled={autoFilled}
+                detectedCount={detectedCount}
+                isDetecting={isDetecting}
+                isProcessing={isProcessing}
+                error={alignError}
+                onDetectCorners={detectCorners}
+                onAddFourCorners={addFourCorners}
+                onClearCorners={clearCorners}
+                onWrap={() => void applyWarp()}
+                cropDraft={cropDraft}
+                cropAspect={cropAspect}
+                onCropAspectChange={setCropAspect}
+                onApplyCrop={applyCrop}
+                onCancelCrop={cancelCrop}
+                maskShapes={maskShapes}
+                maskKind={maskKind}
+                onMaskKindChange={setMaskKind}
+                onRemoveMaskShape={removeMaskShape}
+                onClearMaskShapes={clearMaskShapes}
+                onApplyMask={applyMask}
+                onAddGrayscale={addGrayscale}
+                onAddSharpen={addSharpen}
+                ops={ops}
+                onRemoveOp={removeOp}
+              />
+
+              <div className="flex h-[62vh] min-h-[440px] items-stretch gap-3">
+                <Card className="min-w-0 flex-1">
+                  <CardContent className="h-full p-0">
+                    <div className="relative h-full">
+                      {preview ? (
+                        <NoticeCanvas
+                          ref={canvasRef}
+                          src={
+                            isComparing
+                              ? (activeItem?.sourceUrl ?? preview.url)
+                              : preview.url
+                          }
+                          naturalWidth={
+                            isComparing
+                              ? (activeItem?.sourceWidth ?? preview.width)
+                              : preview.width
+                          }
+                          naturalHeight={
+                            isComparing
+                              ? (activeItem?.sourceHeight ?? preview.height)
+                              : preview.height
+                          }
+                          pageKey={activeItem?.id}
+                          panning={tool === "move"}
+                          onZoomChange={(zoom) =>
+                            setZoomPercent(Math.round(zoom * 100))
+                          }
+                        >
+                          {!isComparing ? (
+                            <CornerOverlay
+                              points={points}
+                              onChange={handlePointChange}
+                              onGestureStart={beginEdit}
+                              frameWidth={preview?.width ?? 0}
+                              frameHeight={preview?.height ?? 0}
+                              interactive={tool === "corners"}
+                            />
                           ) : null}
+
+                          <CropOverlay
+                            crop={cropDraft}
+                            onCropChange={setCrop}
+                            aspect={cropAspect}
+                            frameWidth={preview?.width ?? 0}
+                            frameHeight={preview?.height ?? 0}
+                            active={tool === "crop"}
+                          />
+
+                          <MaskOverlay
+                            shapes={maskShapes}
+                            onChange={updateMaskShapes}
+                            kind={maskKind}
+                            frameWidth={preview?.width ?? 0}
+                            frameHeight={preview?.height ?? 0}
+                            active={tool === "hide"}
+                          />
+                        </NoticeCanvas>
+                      ) : null}
+
+                      {isProcessing ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+                          <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-sm shadow-lg">
+                            <Spinner />
+                            Applying changes...
+                          </div>
                         </div>
-                      ))}
+                      ) : null}
                     </div>
-                  )}
+                  </CardContent>
+                </Card>
 
-                  <Separator />
-
-                  <ModelPicker
-                    models={models}
-                    value={model}
-                    onChange={setModel}
-                    label="Extraction model"
-                    id="model"
-                  />
-
-                  <Button
-                    className="w-full"
-                    onClick={extractText}
-                    disabled={points.length !== 4 || isExtracting}
-                  >
-                    {isExtracting ? "Extracting..." : "Extract"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-              <p>Upload a photo first</p>
+                <PagePanel
+                  items={items}
+                  activeId={activeId}
+                  onSelect={selectItem}
+                  onPrevious={selectPrevious}
+                  onNext={selectNext}
+                  onRemove={removeItem}
+                  onAdd={appendFiles}
+                  onThumbnailError={(id) => void refreshThumbnail(id)}
+                  extractedIds={results
+                    .filter((result) => result.id !== "combined")
+                    .map((result) => result.id)}
+                />
+              </div>
             </div>
           )}
 
-          {error && (
+          {alignError && !hasPages ? (
             <p className="text-sm text-destructive" role="alert">
-              {error}
+              {alignError}
             </p>
-          )}
+          ) : null}
         </TabsContent>
 
-        <TabsContent value="result" className="mt-6 flex flex-col gap-4">
-          {result ? (
-            <div className="flex flex-col gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-2">
-                  <CardTitle className="flex items-center gap-2">
-                    Extracted Fields
-                    {result.data.model ? (
-                      <Badge
-                        variant="secondary"
-                        title={result.data.model.provider_model_id}
-                      >
-                        {result.data.model.label}
-                      </Badge>
-                    ) : null}
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(result.data.raw_text)}
-                  >
-                    Copy Raw Text
-                  </Button>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  {result.data.ocr_unavailable ? (
-                    <p
-                      className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
-                      role="alert"
-                    >
-                      OCR is unavailable right now — the text could not be read,
-                      so no fields were extracted.
-                    </p>
-                  ) : null}
-
-                  {result.data.potential_duplicates.length > 0 ? (
-                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-                      <p className="font-medium">
-                        Possible duplicates — check before saving
-                      </p>
-                      <ul className="mt-2 flex flex-col gap-1 text-muted-foreground">
-                        {result.data.potential_duplicates.map((duplicate) => (
-                          <li
-                            key={duplicate.id}
-                            className="flex flex-wrap gap-2"
-                          >
-                            <span className="font-mono text-xs">
-                              #{duplicate.id}
-                            </span>
-                            <span className="truncate">{duplicate.title}</span>
-                            <span className="text-xs">
-                              {Math.round(duplicate.similarity * 100)}% similar
-                              · {duplicate.status}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-
-                  <div className="max-h-96 overflow-auto rounded-xl border bg-muted/50 p-4">
-                    <pre className="font-mono text-sm whitespace-pre-wrap">
-                      {result.data.raw_text}
-                    </pre>
-                  </div>
-
-                  {renderResultFields(result.data)}
-
-                  <SaveNoticePanel data={result.data} />
-
-                  {result.data.preview_image_base64 && (
-                    <div className="border-t pt-4">
-                      <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-                        Warped Preview
-                      </h3>
-                      <div className="relative aspect-[4/3] max-h-96 w-full overflow-hidden rounded-lg border">
-                        <Image
-                          src={`data:image/png;base64,${result.data.preview_image_base64}`}
-                          alt="Warped preview"
-                          fill
-                          unoptimized
-                          className="object-contain"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-              <p>Complete the corners step and click Extract</p>
-            </div>
-          )}
-
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
+        <TabsContent value="extract" className="mt-6">
+          <ExtractPanel
+            hasImage={hasPages || isTextMode}
+            isTextMode={isTextMode}
+            sourceName={activeItem?.sourceFile.name ?? textName}
+            sourceUrl={preview?.url ?? null}
+            sourceWidth={activeItem?.sourceWidth ?? preview?.width ?? 0}
+            sourceHeight={activeItem?.sourceHeight ?? preview?.height ?? 0}
+            cornerCount={points.length}
+            pendingChanges={ops.length}
+            pageCount={items.length}
+            models={models}
+            model={model}
+            onModelChange={setModel}
+            onExtract={extractText}
+            isExtracting={isExtracting}
+            extractStartedAt={extractStartedAt}
+            extractProgress={extractProgress}
+            error={extractError}
+            results={results}
+            activeResult={activeResult}
+            activeResultId={activeResultId}
+            onSelectResult={setActiveResultId}
+            isResultStale={isResultStale}
+            departments={departments}
+            onGoToEdit={() => setActiveTab("edit")}
+            onChoosePhoto={(file) => void handleFiles([file])}
+            onResetAll={() => {
+              resetAll()
+              void deleteDraft(userId, draftId)
+            }}
+            onNoticeSaved={() => void deleteDraft(userId, draftId)}
+          />
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   )
 }

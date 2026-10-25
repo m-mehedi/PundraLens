@@ -13,12 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -28,23 +23,20 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { listDepartments } from "@/lib/notice-lookups"
 import { updateNoticeAction } from "@/lib/notice-actions"
 import type { NoticeCategory, NoticeRecord } from "@/lib/notice-types"
 
-const CATEGORIES: NoticeCategory[] = [
-  "exam",
-  "registration",
-  "fee",
-  "holiday",
-  "event",
-  "scholarship",
-  "result",
-  "general",
-]
+import { ALL_CATEGORIES } from "./category-badge"
+import {
+  BatchCombobox,
+  DepartmentCombobox,
+} from "@/components/upload-notice/audience-controls"
 
 export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
   const router = useRouter()
   const [isSaving, setIsSaving] = React.useState(false)
+  const departmentsList = React.useMemo(() => listDepartments(), [])
 
   const [title, setTitle] = React.useState(notice.title ?? "")
   const [issuingOffice, setIssuingOffice] = React.useState(
@@ -60,34 +52,33 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
   const [requiredAction, setRequiredAction] = React.useState(
     notice.required_action ?? ""
   )
+  const [deadline, setDeadline] = React.useState(notice.deadline ?? "")
+  const [eventDateTime, setEventDateTime] = React.useState(
+    notice.event_date_and_time ?? ""
+  )
   const [contact, setContact] = React.useState(notice.contact ?? "")
-  const [department, setDepartment] = React.useState(
-    notice.target_students?.department ?? ""
+  const [departments, setDepartments] = React.useState<string[]>(
+    notice.departments
+      ? notice.departments
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
   )
-  const [batch, setBatch] = React.useState(notice.target_students?.batch ?? "")
-  const [semester, setSemester] = React.useState(
-    notice.target_students?.semester ?? ""
+  const [batches, setBatches] = React.useState<number[]>(notice.batches ?? [])
+  const [fees, setFees] = React.useState(notice.fees ?? "")
+  const [noticeNo, setNoticeNo] = React.useState(notice.notice_no ?? "")
+  const [noticeSummaryBn, setNoticeSummaryBn] = React.useState(
+    notice.notice_summary_bn ?? ""
   )
-  const [feeAmount, setFeeAmount] = React.useState(
-    notice.fees ? String(notice.fees.amount) : ""
-  )
-  const [feeCurrency, setFeeCurrency] = React.useState(
-    notice.fees?.currency ?? "BDT"
-  )
-  const [summaryBengali, setSummaryBengali] = React.useState(
-    notice.summary_bengali ?? ""
-  )
-  const [summaryEnglish, setSummaryEnglish] = React.useState(
-    notice.summary_english ?? ""
-  )
-  const [deadlines, setDeadlines] = React.useState(
-    (notice.deadlines ?? [])
-      .map((d) => `${d.date} | ${d.description}`)
-      .join("\n")
+  const [noticeSummaryEn, setNoticeSummaryEn] = React.useState(
+    notice.notice_summary_en ?? ""
   )
 
   const handleSave = async () => {
     setIsSaving(true)
+    const departmentsStr = departments.length > 0 ? departments.join(",") : null
+    const batchesArr = batches.length > 0 ? batches : null
     const result = await updateNoticeAction({
       id: notice.id ?? 0,
       patch: {
@@ -95,33 +86,17 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
         issuing_office: issuingOffice.trim() || null,
         date_of_issue: dateOfIssue.trim() || null,
         category,
+        deadline: deadline.trim() || null,
+        event_date_and_time: eventDateTime.trim() || null,
         venue: venue.trim() || null,
+        departments: departmentsStr,
+        batches: batchesArr,
         required_action: requiredAction.trim() || null,
+        fees: fees.trim() || null,
         contact: contact.trim() || null,
-        target_students: {
-          department: department.trim() || null,
-          batch: batch.trim() || null,
-          semester: semester.trim() || null,
-        },
-        fees: feeAmount.trim()
-          ? {
-              amount: Number(feeAmount),
-              currency: feeCurrency.trim() || "BDT",
-            }
-          : null,
-        summary_bengali: summaryBengali.trim(),
-        summary_english: summaryEnglish.trim(),
-        deadlines: deadlines
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean)
-          .map((line) => {
-            const [date, ...rest] = line.split("|")
-            return {
-              date: date.trim(),
-              description: rest.join("|").trim(),
-            }
-          }),
+        notice_no: noticeNo.trim() || null,
+        notice_summary_bn: noticeSummaryBn.trim(),
+        notice_summary_en: noticeSummaryEn.trim(),
       },
     })
     setIsSaving(false)
@@ -186,9 +161,9 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
+                  {ALL_CATEGORIES.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -204,49 +179,59 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
             </Field>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="edit-department">Department</FieldLabel>
+              <FieldLabel htmlFor="edit-deadline">Deadline</FieldLabel>
               <Input
-                id="edit-department"
-                value={department}
-                onChange={(event) => setDepartment(event.target.value)}
+                id="edit-deadline"
+                type="date"
+                value={deadline}
+                onChange={(event) => setDeadline(event.target.value)}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="edit-batch">Batch</FieldLabel>
+              <FieldLabel htmlFor="edit-event">
+                Event date &amp; time
+              </FieldLabel>
               <Input
-                id="edit-batch"
-                value={batch}
-                onChange={(event) => setBatch(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="edit-semester">Semester</FieldLabel>
-              <Input
-                id="edit-semester"
-                value={semester}
-                onChange={(event) => setSemester(event.target.value)}
+                id="edit-event"
+                type="datetime-local"
+                value={eventDateTime}
+                onChange={(event) => setEventDateTime(event.target.value)}
               />
             </Field>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="edit-fee-amount">Fee amount</FieldLabel>
-              <Input
-                id="edit-fee-amount"
-                inputMode="decimal"
-                value={feeAmount}
-                onChange={(event) => setFeeAmount(event.target.value)}
+              <FieldLabel htmlFor="edit-departments">Departments</FieldLabel>
+              <DepartmentCombobox
+                value={departments}
+                onChange={setDepartments}
+                departments={departmentsList}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="edit-fee-currency">Fee currency</FieldLabel>
+              <FieldLabel htmlFor="edit-batches">Batches</FieldLabel>
+              <BatchCombobox value={batches} onChange={setBatches} />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="edit-fees">Fees</FieldLabel>
               <Input
-                id="edit-fee-currency"
-                value={feeCurrency}
-                onChange={(event) => setFeeCurrency(event.target.value)}
+                id="edit-fees"
+                value={fees}
+                onChange={(event) => setFees(event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-notice-no">Notice number</FieldLabel>
+              <Input
+                id="edit-notice-no"
+                value={noticeNo}
+                onChange={(event) => setNoticeNo(event.target.value)}
               />
             </Field>
           </div>
@@ -261,19 +246,6 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
             />
           </Field>
 
-          <Field>
-            <FieldLabel htmlFor="edit-deadlines">Deadlines</FieldLabel>
-            <Textarea
-              id="edit-deadlines"
-              value={deadlines}
-              onChange={(event) => setDeadlines(event.target.value)}
-              className="min-h-24 font-mono text-xs"
-            />
-            <FieldDescription>
-              One per line, as <code>YYYY-MM-DD | description</code>.
-            </FieldDescription>
-          </Field>
-
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="edit-summary-bn">
@@ -281,9 +253,10 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
               </FieldLabel>
               <Textarea
                 id="edit-summary-bn"
-                value={summaryBengali}
-                onChange={(event) => setSummaryBengali(event.target.value)}
-                className="min-h-24"
+                value={noticeSummaryBn}
+                onChange={(event) => setNoticeSummaryBn(event.target.value)}
+                className="min-h-24 leading-relaxed"
+                lang="bn"
               />
             </Field>
             <Field>
@@ -292,8 +265,8 @@ export function NoticeEditForm({ notice }: { notice: NoticeRecord }) {
               </FieldLabel>
               <Textarea
                 id="edit-summary-en"
-                value={summaryEnglish}
-                onChange={(event) => setSummaryEnglish(event.target.value)}
+                value={noticeSummaryEn}
+                onChange={(event) => setNoticeSummaryEn(event.target.value)}
                 className="min-h-24"
               />
             </Field>

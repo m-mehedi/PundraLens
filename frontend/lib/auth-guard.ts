@@ -1,18 +1,17 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
+import { ROLE_WEIGHTS, hasRole, roleOf, type Role } from "@/lib/roles"
 
-export type Role = "student" | "staff" | "admin"
-
-export const ROLE_WEIGHTS: Record<Role, number> = {
-  student: 1,
-  staff: 2,
-  admin: 3,
-}
+export type { Role }
+export { ROLE_WEIGHTS, hasRole, roleOf }
 
 /**
  * Checks if the current user meets or exceeds the minimum required role.
- * If not, redirects to /unauthorized.
+ *
+ * - No session  -> `/login`
+ * - Revoked     -> `/revoked`
+ * - Not enough  -> `/unauthorized`
  *
  * Intended for use in Server Components and Route Handlers.
  */
@@ -25,17 +24,25 @@ export async function requireRole(minimumRole: Role) {
     redirect("/login")
   }
 
-  const userRole = (session.user as { role?: Role }).role
-  if (!userRole || !(userRole in ROLE_WEIGHTS)) {
+  const userRole = roleOf(session.user)
+
+  if (userRole === "revoked") {
+    redirect("/revoked")
+  }
+
+  if (!hasRole(userRole, minimumRole)) {
     redirect("/unauthorized")
   }
 
-  const userWeight = ROLE_WEIGHTS[userRole as Role]
-  const requiredWeight = ROLE_WEIGHTS[minimumRole]
+  return { session, role: userRole }
+}
 
-  if (userWeight < requiredWeight) {
-    redirect("/unauthorized")
-  }
+/** Shorthand for `requireRole("staff")` — staff and administrators pass. */
+export async function requireStaff() {
+  return requireRole("staff")
+}
 
-  return session
+/** Shorthand for `requireRole("admin")`. */
+export async function requireAdmin() {
+  return requireRole("admin")
 }

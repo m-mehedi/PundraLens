@@ -36,6 +36,9 @@ pnpm-debug.log*
 *.sqlite
 *.sqlite-journal
 
+# user-uploaded avatars (runtime data, not source)
+/public/uploads/
+
 # vercel
 .vercel
 

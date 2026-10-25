@@ -1,154 +1,115 @@
 "use client"
 
 import * as React from "react"
-import { SimpleHandler, type CropperState } from "react-advanced-cropper"
-import type { Corner } from "./types"
 
-export interface PolygonOverlayProps {
+import { clampCorner } from "@/lib/corner-geometry"
+
+import { useCanvas } from "./notice-canvas"
+import type { Corner } from "./types"
+import { useImageDrag } from "./use-image-drag"
+
+export interface CornerOverlayProps {
   points: Corner[]
   onChange: (points: Corner[]) => void
-  imageWidth: number
-  imageHeight: number
-  state: CropperState | null
-  stencilRect: {
-    left: number
-    top: number
-    width: number
-    height: number
-  } | null
+  /**
+   * Called the moment a corner is grabbed, before it moves — so a drag
+   * counts as one change, not one change per pixel.
+   */
+  onGestureStart?: () => void
+  /** The natural size of the image the corners refer to. */
+  frameWidth: number
+  frameHeight: number
+  /** When false the polygon is shown but the handles cannot be dragged. */
+  interactive?: boolean
 }
 
-/** Visible size of a corner handle, in screen pixels. */
-const HANDLER_SIZE = 16
+/** The size of a corner handle, in screen pixels. */
+const HANDLE_SIZE = 16
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
-
-export function PolygonOverlay({
+/**
+ * The four corners of the notice.
+ *
+ * The handles are drawn at a fixed screen size, so they stay easy to grab
+ * however far the page is zoomed in.
+ */
+export function CornerOverlay({
   points,
   onChange,
-  imageWidth,
-  imageHeight,
-  state,
-  stencilRect,
-}: PolygonOverlayProps) {
-  // Image pixels per screen pixel. Zero while the image is not loaded yet.
-  const coefficient =
-    state?.visibleArea && state.boundary?.width
-      ? state.visibleArea.width / state.boundary.width
-      : 0
+  onGestureStart,
+  frameWidth,
+  frameHeight,
+  interactive = true,
+}: CornerOverlayProps) {
+  const { zoom, box } = useCanvas()
+  const makeDrag = useImageDrag()
 
-  const coordinates = state?.coordinates ?? null
-
-  const ready =
-    Boolean(coordinates) &&
-    Boolean(stencilRect) &&
-    coefficient > 0 &&
-    imageWidth > 0 &&
-    imageHeight > 0
-
-  // Screen pixels of every corner, relative to the overlay (which is anchored
-  // on the cropper's stencil rect).
-  const relPoints = React.useMemo(() => {
-    if (!ready || !coordinates) return []
-    return points.map((point) => {
-      const imageX = (point.x / 100) * imageWidth
-      const imageY = (point.y / 100) * imageHeight
-      return {
-        x: (imageX - coordinates.left) / coefficient,
-        y: (imageY - coordinates.top) / coefficient,
-      }
+  const startDrag = (index: number) => {
+    const drag = makeDrag((point) => {
+      onChange(
+        points.map((corner, i) =>
+          i === index
+            ? clampCorner({
+                x: (point.x / frameWidth) * 100,
+                y: (point.y / frameHeight) * 100,
+              })
+            : corner
+        )
+      )
     })
-  }, [ready, coordinates, coefficient, points, imageWidth, imageHeight])
-
-  // Mirrors of the props so a fast drag never loses a delta between renders.
-  const relRef = React.useRef(relPoints)
-  React.useEffect(() => {
-    relRef.current = relPoints
-  }, [relPoints])
-
-  const pointsRef = React.useRef(points)
-  React.useEffect(() => {
-    pointsRef.current = points
-  }, [points])
-
-  const handleMove = (index: number, dirs: { top?: number; left?: number }) => {
-    if (!ready || !coordinates) return
-    const base = relRef.current[index] ?? relPoints[index]
-    if (!base) return
-
-    // `dirs` is a delta in screen pixels, relative to the overlay.
-    const nextRelX = base.x + (dirs.left ?? 0)
-    const nextRelY = base.y + (dirs.top ?? 0)
-
-    // Back to image pixels, then to a percentage of the source image.
-    const nextImageX = nextRelX * coefficient + coordinates.left
-    const nextImageY = nextRelY * coefficient + coordinates.top
-
-    const nextPoints = pointsRef.current.map((point, i) =>
-      i === index
-        ? {
-            x: clamp((nextImageX / imageWidth) * 100, 0, 100),
-            y: clamp((nextImageY / imageHeight) * 100, 0, 100),
-          }
-        : point
-    )
-
-    relRef.current = relRef.current.map((value, i) =>
-      i === index ? { x: nextRelX, y: nextRelY } : value
-    )
-    pointsRef.current = nextPoints
-    onChange(nextPoints)
+    return (event: React.PointerEvent<HTMLButtonElement>) => {
+      onGestureStart?.()
+      drag(event)
+    }
   }
 
-  if (!ready || !stencilRect) return null
+  if (frameWidth <= 0 || frameHeight <= 0) return null
 
   return (
-    <div
-      className="pointer-events-none absolute text-primary"
-      style={{
-        left: stencilRect.left,
-        top: stencilRect.top,
-        width: stencilRect.width,
-        height: stencilRect.height,
-      }}
-    >
-      <svg className="pointer-events-none absolute inset-0 overflow-visible">
+    <div className="pointer-events-none absolute inset-0 text-primary">
+      <svg
+        className="pointer-events-none absolute overflow-visible"
+        style={{ left: box.left, top: box.top }}
+        width={box.width}
+        height={box.height}
+        viewBox={`0 0 ${frameWidth} ${frameHeight}`}
+        preserveAspectRatio="none"
+      >
         <polygon
-          points={relPoints.map((point) => `${point.x},${point.y}`).join(" ")}
+          points={points
+            .map(
+              (point) =>
+                `${(point.x / 100) * frameWidth},${(point.y / 100) * frameHeight}`
+            )
+            .join(" ")}
           fill="currentColor"
           fillOpacity={0.15}
           stroke="currentColor"
           strokeWidth={2}
           strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
         />
-        {relPoints.map((point, index) => (
-          <circle
-            key={index}
-            cx={point.x}
-            cy={point.y}
-            r={4}
-            fill="currentColor"
-          />
-        ))}
       </svg>
 
-      {relPoints.map((point, index) => (
-        <SimpleHandler
-          key={index}
-          wrapperClassName="pointer-events-auto size-4 rounded-full border-2 border-primary bg-background shadow-sm"
-          defaultClassName="rounded-full"
-          wrapperStyle={{
-            left: point.x,
-            top: point.y,
-            width: HANDLER_SIZE,
-            height: HANDLER_SIZE,
-          }}
-          onMove={(dirs) => handleMove(index, dirs)}
-          onMoveEnd={() => {}}
-        />
-      ))}
+      {points.map((point, index) => {
+        const left = box.left + (point.x / 100) * frameWidth * zoom
+        const top = box.top + (point.y / 100) * frameHeight * zoom
+        return (
+          <button
+            key={index}
+            type="button"
+            aria-label={`Corner ${index + 1}`}
+            disabled={!interactive}
+            onPointerDown={startDrag(index)}
+            className="pointer-events-auto absolute size-4 rounded-full border-2 border-background bg-primary shadow-sm disabled:pointer-events-none"
+            style={{
+              left: left - HANDLE_SIZE / 2,
+              top: top - HANDLE_SIZE / 2,
+              width: HANDLE_SIZE,
+              height: HANDLE_SIZE,
+            }}
+          />
+        )
+      })}
     </div>
   )
 }

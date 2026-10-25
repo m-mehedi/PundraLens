@@ -1,23 +1,13 @@
-import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { UserDataTableClient } from "@/components/dashboard/user-data-table-client"
+import { requireAdmin } from "@/lib/auth-guard"
+import { UserDataTable } from "@/components/dashboard/user-data-table"
+import { StaffForm } from "@/components/dashboard/staff-form"
 import { revokeUser, bulkRevokeUsers } from "@/lib/user-actions"
 import { User02Icon } from "@hugeicons/core-free-icons"
 
 export default async function ManageStaffsPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
-  if (!session) {
-    redirect("/login")
-  }
-
-  const userRole = (session.user as { role?: string }).role
-  if (userRole !== "admin") {
-    redirect("/unauthorized")
-  }
+  await requireAdmin()
 
   const { users } = await auth.api.listUsers({
     headers: await headers(),
@@ -30,21 +20,28 @@ export default async function ManageStaffsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Manage Staff</h1>
-        <p className="mt-1 text-muted-foreground">
-          View and manage staff members who can upload and manage notices.
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Staff</h2>
+          <p className="text-sm text-muted-foreground">
+            Staff can upload and publish notices. Create their account here and
+            share the temporary password.
+          </p>
+        </div>
+        <StaffForm />
       </div>
 
-      <UserDataTableClient
+      <UserDataTable
         users={users}
         actionType="revoke"
+        rowLabel="staff members"
+        rowLabelSingular="staff member"
         emptyIcon={User02Icon}
-        emptyTitle="No staff members found"
-        emptyDescription="There are no staff members in the system yet."
+        emptyTitle="No staff members yet"
+        emptyDescription="Add a staff member above to give someone access to the notice workflow."
         action={revokeUser}
         bulkAction={bulkRevokeUsers}
+        extraActions={["changeRole", "resetPassword"]}
       />
     </div>
   )

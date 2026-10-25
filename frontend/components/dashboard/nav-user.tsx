@@ -112,7 +112,9 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/profile")}
+              >
                 <HugeiconsIcon icon={UserIcon} />
                 Account
               </DropdownMenuItem>

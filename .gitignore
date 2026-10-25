@@ -25,3 +25,7 @@ next-env.d.ts
 # Tooling
 .DS_Store
 *.log
+
+# Evaluation harness: cached runs and result files
+backend_evaluation/.cache/
+backend_evaluation/results/

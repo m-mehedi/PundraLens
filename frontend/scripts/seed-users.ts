@@ -1,32 +1,38 @@
 import "dotenv/config"
 import { auth } from "@/lib/auth"
-import { db } from "@/db"
-import { user } from "@/auth-schema"
-import { eq } from "drizzle-orm"
-import { createLocalAccountIssuer } from "better-auth/db"
 import { STUDENT_EMAIL_DOMAIN } from "@/lib/user-id"
-
-type SeedRole = "student" | "staff" | "admin"
+import type { AuthRole } from "@/lib/roles"
 
 type SeedUser = {
   email: string
   name: string
-  role: SeedRole
+  role: AuthRole
+  phone?: string
+  department?: string
+  batch?: string
+  semester?: string
+  employeeId?: string
+  designation?: string
 }
 
 const DEFAULT_PASSWORD = "Pundra@123"
 
-const STUDENT_IDS = [
-  "0322512101",
-  "0322512102",
-  "0322512103",
-  "0322512104",
-  "0322512105",
-  "0322512106",
-  "0322512107",
-  "0322512108",
-  "0322512109",
-  "0322512110",
+const STUDENTS: {
+  id: string
+  name: string
+  batch: string
+  semester: string
+}[] = [
+  { id: "0322512101", name: "Rafiqul Islam", batch: "54", semester: "5" },
+  { id: "0322512102", name: "Nusrat Jahan", batch: "54", semester: "5" },
+  { id: "0322512103", name: "Tanvir Ahmed", batch: "53", semester: "6" },
+  { id: "0322512104", name: "Sadia Afrin", batch: "53", semester: "6" },
+  { id: "0322512105", name: "Mahmudul Hasan", batch: "52", semester: "7" },
+  { id: "0322512106", name: "Farhana Akter", batch: "52", semester: "7" },
+  { id: "0322512107", name: "Imran Khan", batch: "51", semester: "8" },
+  { id: "0322512108", name: "Sharmin Sultana", batch: "51", semester: "8" },
+  { id: "0322512109", name: "Arif Hossain", batch: "54", semester: "5" },
+  { id: "0322512110", name: "Jannatul Ferdous", batch: "53", semester: "6" },
 ]
 
 function buildSeedUsers(): SeedUser[] {
@@ -36,25 +42,39 @@ function buildSeedUsers(): SeedUser[] {
   if (adminEmail) {
     users.push({
       email: adminEmail,
-      name: "Admin",
+      name: process.env.ADMIN_NAME ?? "Portal Administrator",
       role: "admin",
+      designation: "System Administrator",
     })
   }
 
   users.push(
     {
       email: `staff1${STUDENT_EMAIL_DOMAIN}`,
-      name: "Staff One",
+      name: "Mohammad Karim",
       role: "staff",
+      employeeId: "PU-1001",
+      designation: "Academic Officer",
+      department: "Office of the Registrar",
     },
-    { email: `staff2${STUDENT_EMAIL_DOMAIN}`, name: "Staff Two", role: "staff" }
+    {
+      email: `staff2${STUDENT_EMAIL_DOMAIN}`,
+      name: "Rehana Parvin",
+      role: "staff",
+      employeeId: "PU-1002",
+      designation: "Examination Controller",
+      department: "Controller of Examinations",
+    }
   )
 
-  for (const studentId of STUDENT_IDS) {
+  for (const student of STUDENTS) {
     users.push({
-      email: `${studentId}${STUDENT_EMAIL_DOMAIN}`,
-      name: `Student ${studentId}`,
+      email: `${student.id}${STUDENT_EMAIL_DOMAIN}`,
+      name: student.name,
       role: "student",
+      department: "Computer Science & Engineering",
+      batch: student.batch,
+      semester: student.semester,
     })
   }
 
@@ -70,7 +90,6 @@ async function main() {
   }
 
   const ctx = await auth.$context
-  const hashedPassword = await ctx.password.hash(password)
 
   let created = 0
   let skipped = 0
@@ -83,31 +102,20 @@ async function main() {
       continue
     }
 
-    const createdUser = await ctx.internalAdapter.createUser(
-      {
+    const { role, ...profile } = seedUser
+
+    // `auth.api.createUser` runs through the admin plugin, so the role is
+    // validated against the roles declared in `lib/auth.ts` and the profile
+    // fields are written in the same insert.
+    await auth.api.createUser({
+      body: {
         email: seedUser.email,
+        password,
         name: seedUser.name,
-        role: seedUser.role,
-        emailVerified: true,
+        role,
+        data: profile,
       },
-      {
-        method: "email-password",
-      }
-    )
-
-    await ctx.internalAdapter.createAccount({
-      userId: createdUser.id,
-      providerId: "credential",
-      issuer: createLocalAccountIssuer("credential"),
-      accountId: createdUser.id,
-      password: hashedPassword,
     })
-
-    // The admin plugin may normalise the role on insert; force the seed role.
-    await db
-      .update(user)
-      .set({ role: seedUser.role })
-      .where(eq(user.id, createdUser.id))
 
     console.log(`+ ${seedUser.email} (${seedUser.role}) created.`)
     created += 1

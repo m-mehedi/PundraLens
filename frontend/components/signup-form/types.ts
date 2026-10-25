@@ -18,10 +18,12 @@ export type Department = (typeof DEPARTMENTS)[number]
 export type SignupFormStep = "account" | "password"
 
 export type SignupFormData = {
+  name: string
   student_id: string
   department: Department
   batch: string
   semester: string
+  phone: string
   password: string
   confirmPassword: string
 }

@@ -1,23 +1,12 @@
-import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { UserDataTableClient } from "@/components/dashboard/user-data-table-client"
+import { requireAdmin } from "@/lib/auth-guard"
+import { UserDataTable } from "@/components/dashboard/user-data-table"
 import { restoreUser, bulkRestoreUsers } from "@/lib/user-actions"
 import { User02Icon } from "@hugeicons/core-free-icons"
 
 export default async function ManageRevokedPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
-  if (!session) {
-    redirect("/login")
-  }
-
-  const userRole = (session.user as { role?: string }).role
-  if (userRole !== "admin") {
-    redirect("/unauthorized")
-  }
+  await requireAdmin()
 
   const { users } = await auth.api.listUsers({
     headers: await headers(),
@@ -29,25 +18,17 @@ export default async function ManageRevokedPage() {
   })
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Manage Revoked Users
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          View and restore users who have been revoked.
-        </p>
-      </div>
-
-      <UserDataTableClient
-        users={users}
-        actionType="restore"
-        emptyIcon={User02Icon}
-        emptyTitle="No revoked users found"
-        emptyDescription="There are no revoked users in the system."
-        action={restoreUser}
-        bulkAction={bulkRestoreUsers}
-      />
-    </div>
+    <UserDataTable
+      users={users}
+      actionType="restore"
+      rowLabel="accounts"
+      rowLabelSingular="account"
+      emptyIcon={User02Icon}
+      emptyTitle="No revoked accounts"
+      emptyDescription="Revoked students and staff land here so you can restore their access."
+      action={restoreUser}
+      bulkAction={bulkRestoreUsers}
+      extraActions={["resetPassword"]}
+    />
   )
 }
