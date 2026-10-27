@@ -5,151 +5,153 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    /*
+  --font-heading: var(--font-sans);
+  /*
      * One font stack for the whole app: Inter first, Purno behind it.
      * Inter carries no Bangla glyphs, so every Bengali character falls
      * through to Purno while the Latin text around it stays in Inter.
      */
-    /*--font-sans: var(--font-sans), var(--font-purno);*/
-    --font-sans: var(--font-sans);
-    /* The raw OCR text is set in a monospace face, which has no Bangla
+  /*--font-sans: var(--font-sans), var(--font-purno);*/
+  --font-sans: var(--font-sans);
+  /* The raw OCR text is set in a monospace face, which has no Bangla
      * either. Purno goes behind it for the same reason. */
-    /*--font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+  /*--font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         "Liberation Mono", var(--font-purno), "Courier New", monospace;*/
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-            "Liberation Mono", "Courier New", monospace;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-success: var(--success);
-    --color-warning: var(--warning);
-    --color-warning-foreground: var(--warning-foreground);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.148 0.004 228.8);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.148 0.004 228.8);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.148 0.004 228.8);
-    --primary: oklch(0.488 0.243 264.376);
-    --primary-foreground: oklch(0.97 0.014 254.604);
-    --secondary: oklch(0.967 0.001 286.375);
-    --secondary-foreground: oklch(0.21 0.006 285.885);
-    --muted: oklch(0.963 0.002 197.1);
-    --muted-foreground: oklch(0.56 0.021 213.5);
-    --accent: oklch(0.963 0.002 197.1);
-    --accent-foreground: oklch(0.218 0.008 223.9);
-    --destructive: oklch(0.577 0.245 27.325);
-    --success: oklch(0.596 0.145 163.225);
-    --warning: oklch(0.769 0.188 70.08);
-    --warning-foreground: oklch(0.28 0.07 70);
-    --border: oklch(0.925 0.005 214.3);
-    --input: oklch(0.925 0.005 214.3);
-    --ring: oklch(0.723 0.014 214.4);
-    --chart-1: oklch(0.845 0.143 164.978);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.596 0.145 163.225);
-    --chart-4: oklch(0.508 0.118 165.612);
-    --chart-5: oklch(0.432 0.095 166.913);
-    --radius: 0.25rem;
-    --sidebar: oklch(0.987 0.002 197.1);
-    --sidebar-foreground: oklch(0.148 0.004 228.8);
-    --sidebar-primary: oklch(0.546 0.245 262.881);
-    --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-    --sidebar-accent: oklch(0.963 0.002 197.1);
-    --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-    --sidebar-border: oklch(0.925 0.005 214.3);
-    --sidebar-ring: oklch(0.723 0.014 214.4);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --primary: oklch(0.488 0.243 264.376);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --accent: oklch(0.963 0.002 197.1);
+  --accent-foreground: oklch(0.218 0.008 223.9);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.596 0.145 163.225);
+  --warning: oklch(0.769 0.188 70.08);
+  --warning-foreground: oklch(0.28 0.07 70);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --chart-1: oklch(0.845 0.143 164.978);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.596 0.145 163.225);
+  --chart-4: oklch(0.508 0.118 165.612);
+  --chart-5: oklch(0.432 0.095 166.913);
+  --radius: 0.25rem;
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-primary: oklch(0.546 0.245 262.881);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
 }
 
 .dark {
-    --background: oklch(0.148 0.004 228.8);
-    --foreground: oklch(0.987 0.002 197.1);
-    --card: oklch(0.218 0.008 223.9);
-    --card-foreground: oklch(0.987 0.002 197.1);
-    --popover: oklch(0.218 0.008 223.9);
-    --popover-foreground: oklch(0.987 0.002 197.1);
-    --primary: oklch(0.424 0.199 265.638);
-    --primary-foreground: oklch(0.97 0.014 254.604);
-    --secondary: oklch(0.274 0.006 286.033);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.275 0.011 216.9);
-    --muted-foreground: oklch(0.723 0.014 214.4);
-    --accent: oklch(0.275 0.011 216.9);
-    --accent-foreground: oklch(0.987 0.002 197.1);
-    --destructive: oklch(0.704 0.191 22.216);
-    --success: oklch(0.696 0.17 162.48);
-    --warning: oklch(0.828 0.189 84.429);
-    --warning-foreground: oklch(0.24 0.07 70);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.56 0.021 213.5);
-    --chart-1: oklch(0.845 0.143 164.978);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.596 0.145 163.225);
-    --chart-4: oklch(0.508 0.118 165.612);
-    --chart-5: oklch(0.432 0.095 166.913);
-    --sidebar: oklch(0.218 0.008 223.9);
-    --sidebar-foreground: oklch(0.987 0.002 197.1);
-    --sidebar-primary: oklch(0.623 0.214 259.815);
-    --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-    --sidebar-accent: oklch(0.275 0.011 216.9);
-    --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.56 0.021 213.5);
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.424 0.199 265.638);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.696 0.17 162.48);
+  --warning: oklch(0.828 0.189 84.429);
+  --warning-foreground: oklch(0.24 0.07 70);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.845 0.143 164.978);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.596 0.145 163.225);
+  --chart-4: oklch(0.508 0.118 165.612);
+  --chart-5: oklch(0.432 0.095 166.913);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.623 0.214 259.815);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
-    }
+  }
   html {
     @apply font-sans;
-    }
+  }
 }
 
 /*
@@ -360,7 +362,6 @@
   pointer-events: none;
 }
 
-
 /*
  * The shadcn Big Calendar stylesheet ships `event-variant-primary` (blue),
  * `-secondary` and `-outline`, but no warning tone. This adds the orange
@@ -374,4 +375,295 @@
 
 .notice-calendar .rbc-event.event-variant-warning:hover {
   --event-bg: color-mix(in oklab, var(--warning) 85%, transparent);
+}
+
+/*
+ * The pinned-notice language.
+ *
+ * A notice reads as a notice when it looks like a slip of paper pinned to a
+ * board: an uneven hand-cut edge, a slight tilt, and a hard offset shadow
+ * rather than a soft one. That treatment started on the notices grid and is
+ * shared here so the detail sheet, the calendar chips and LensBot's
+ * citations all speak the same language.
+ *
+ * `--pin` and `--crease` are the two names the rest of the language uses:
+ * the pin is the one accent, the crease is the paper's edge.
+ */
+:root {
+  --pin: var(--warning);
+  --crease: var(--border);
+}
+
+.dark {
+  --pin: var(--warning);
+  --crease: var(--border);
+}
+
+/*
+ * A sheet of paper. Neutral by default — the colour is spent on the pin,
+ * so the surface itself stays paper-coloured even on the dark board.
+ */
+.paper {
+  position: relative;
+  border: 1px solid var(--crease);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  box-shadow:
+    0 1px 0 var(--crease),
+    3px 3px 0 color-mix(in oklab, var(--foreground) 8%, transparent);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.paper:hover {
+  box-shadow:
+    0 1px 0 var(--crease),
+    6px 8px 0 color-mix(in oklab, var(--foreground) 12%, transparent);
+}
+
+/*
+ * The torn edge. Three cuts keep a grid irregular — identical rotations
+ * read as a pattern, which defeats the purpose of a pinboard.
+ */
+.paper-torn {
+  border-width: 3px 4px 3px 5px;
+  border-radius: 95% 4% 92% 5% / 4% 95% 6% 95%;
+}
+
+.paper-torn-1 {
+  border-width: 3px 4px 3px 5px;
+  border-radius: 95% 4% 92% 5% / 4% 95% 6% 95%;
+  transform: rotate(2deg);
+}
+
+.paper-torn-2 {
+  border-width: 3px 3px 5px 5px;
+  border-radius: 4% 95% 6% 95% / 95% 4% 92% 5%;
+  transform: rotate(-2deg);
+}
+
+.paper-torn-3 {
+  border-width: 5px 3px 3px 5px;
+  border-radius: 95% 4% 97% 5% / 4% 94% 3% 95%;
+  transform: rotate(2deg);
+}
+
+.paper-torn-1:hover,
+.paper-torn-3:hover {
+  transform: rotate(0.5deg);
+}
+
+.paper-torn-2:hover {
+  transform: rotate(-0.5deg);
+}
+
+/*
+ * A scrap of tape over the top edge — the one fixed point that makes the
+ * tilt read as pinned rather than broken. Opaque on purpose.
+ */
+.tape {
+  position: absolute;
+  top: -0.5rem;
+  left: 50%;
+  height: 1.25rem;
+  width: 4.5rem;
+  transform: translateX(-50%) rotate(-2deg);
+  border: 1px solid var(--foreground);
+  background-color: var(--pin);
+  box-shadow: 1px 1px 0 var(--foreground);
+  pointer-events: none;
+}
+
+.paper-torn-2 .tape,
+.tape-alt {
+  transform: translateX(-50%) rotate(2deg);
+}
+
+/*
+ * The notices grid card: a hand-drawn sketchy slip. The main border is the
+ * outer stroke; the ::before pseudo-element draws a second, slightly offset
+ * border so the card looks like it was traced twice by hand.
+ */
+.notice-slip {
+  position: relative;
+  border: 3px solid color-mix(in oklab, var(--foreground) 75%, transparent);
+  border-radius: 2% 6% 5% 4% / 1% 1% 2% 4%;
+  background-color: var(--card);
+  box-shadow:
+    2px 2px 0 color-mix(in oklab, var(--foreground) 6%, transparent);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.notice-slip::before {
+  content: "";
+  border: 2px solid color-mix(in oklab, var(--foreground) 40%, transparent);
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0) scale(1.015) rotate(0.5deg);
+  border-radius: 1% 1% 2% 4% / 2% 6% 5% 4%;
+  pointer-events: none;
+}
+
+.notice-slip:hover {
+  box-shadow:
+    4px 4px 0 color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+.notice-slip-1 {
+  border-radius: 2% 6% 5% 4% / 1% 1% 2% 4%;
+}
+
+.notice-slip-1::before {
+  transform: translate3d(-50%, -50%, 0) scale(1.015) rotate(0.5deg);
+  border-radius: 1% 1% 2% 4% / 2% 6% 5% 4%;
+}
+
+.notice-slip-2 {
+  border-radius: 5% 2% 4% 6% / 2% 4% 1% 1%;
+}
+
+.notice-slip-2::before {
+  transform: translate3d(-50%, -50%, 0) scale(1.02) rotate(-0.4deg);
+  border-radius: 4% 1% 1% 2% / 1% 2% 6% 5%;
+}
+
+.notice-slip-3 {
+  border-radius: 4% 5% 6% 2% / 1% 2% 4% 1%;
+}
+
+.notice-slip-3::before {
+  transform: translate3d(-50%, -50%, 0) scale(1.018) rotate(0.3deg);
+  border-radius: 2% 4% 1% 5% / 5% 1% 2% 4%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper,
+  .paper:hover,
+  .paper-torn-1,
+  .paper-torn-2,
+  .paper-torn-3,
+  .paper-torn-1:hover,
+  .paper-torn-2:hover,
+  .paper-torn-3:hover,
+  .notice-slip,
+  .notice-slip:hover,
+  .notice-slip::before,
+  .notice-slip-1,
+  .notice-slip-2,
+  .notice-slip-3 {
+    transform: none;
+    transition: none;
+  }
+}
+
+/*
+ * The calendar learns the same language: each event is a small torn slip
+ * of paper rather than a filled pill. The audience colour lives in the
+ * left pin, not in the paper, so a month of notices stays calm and the
+ * one detail that matters — whose notice it is — still reads at a glance.
+ * This is appended rather than edited into the shipped Big Calendar
+ * stylesheet, so it can be reverted on its own.
+ */
+.notice-calendar .rbc-event,
+.notice-calendar .rbc-slot-selection {
+  --event-color: var(--foreground);
+  position: relative;
+  border: 1px solid var(--crease);
+  background-color: var(--card);
+  box-shadow: 2px 2px 0 color-mix(in oklab, oklch(0.2 0 0) 12%, transparent);
+  border-radius: 0.375rem;
+}
+
+.notice-calendar .rbc-event {
+  padding-left: 10px;
+}
+
+/* The pin: a strip of audience colour down the left edge of the slip. It
+ * spans the chip's full height so it covers the left border and reads as
+ * the slip's spine, with the same corner as the paper. */
+.notice-calendar .rbc-event::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: -1px;
+  width: 4px;
+  background-color: var(--event-bg);
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+
+.notice-calendar .rbc-event:hover {
+  box-shadow: 4px 5px 0 color-mix(in oklab, oklch(0.2 0 0) 16%, transparent);
+  transform: translateY(-1px) rotate(-0.5deg);
+}
+
+/* Freeze the pin on hover: only the paper lifts, the spine keeps its
+ * audience colour instead of the shipped hover tint. */
+.notice-calendar .rbc-event.event-variant-primary:hover {
+  --event-bg: var(--primary);
+}
+
+.notice-calendar .rbc-event.event-variant-secondary:hover {
+  --event-bg: var(--secondary);
+}
+
+.notice-calendar .rbc-event.event-variant-outline:hover {
+  --event-bg: var(--background);
+}
+
+/* In dark mode the outline variant's pin uses --background, which blends
+ * into the dark card. Override it to a subtle gray so the strip stays visible. */
+.dark .notice-calendar .rbc-event.event-variant-outline {
+  --event-bg: var(--muted-foreground);
+}
+
+.notice-calendar .rbc-event.event-variant-warning:hover {
+  --event-bg: var(--warning);
+}
+
+.notice-calendar .rbc-event.rbc-selected,
+.notice-calendar .rbc-event:focus,
+.notice-calendar .rbc-event:focus-visible {
+  background-color: var(--card);
+  color: var(--foreground);
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--ring);
+}
+
+/* The month grid rests on the board: creases, not heavy rules. */
+.notice-calendar .rbc-month-view {
+  border-color: var(--crease);
+}
+
+.notice-calendar .rbc-header {
+  border-color: var(--crease);
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.notice-calendar .rbc-day-bg {
+  border-color: var(--crease);
+}
+
+.notice-calendar .rbc-off-range-bg {
+  background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+}
+
+.notice-calendar .rbc-today {
+  background-color: color-mix(in oklab, var(--pin) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-calendar .rbc-event:hover {
+    transform: none;
+  }
 }

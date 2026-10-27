@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AiBrain04Icon, SendIcon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
@@ -38,6 +39,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { readErrorDetail } from "@/lib/backend-error"
+import { MarkdownContent } from "@/components/lensbot-markdown"
 
 interface Citation {
   notice_id: number
@@ -207,28 +209,33 @@ function Chat() {
                           </MessageHeader>
                           <Bubble
                             align={isUser ? "end" : "start"}
-                            variant={isUser ? "muted" : "secondary"}
+                            variant={isUser ? "muted" : "outline"}
                           >
-                            <BubbleContent>{text}</BubbleContent>
+                            <BubbleContent
+                              className={
+                                isUser
+                                  ? undefined
+                                  : "shadow-[2px_2px_0_color-mix(in_oklab,var(--foreground)_10%,transparent)]"
+                              }
+                            >
+                              {isUser ? text : <MarkdownContent>{text}</MarkdownContent>}
+                            </BubbleContent>
                           </Bubble>
 
                           {!isUser && message.citations?.length ? (
-                            <div className="mt-2 flex flex-col gap-2">
+                            <div className="mt-2 flex flex-wrap gap-1.5">
                               {message.citations.map((citation) => (
-                                <div
+                                <Link
                                   key={`${message.id}-${citation.notice_id}`}
-                                  className="rounded-xl border bg-muted/40 p-3 text-xs"
+                                  href={`/dashboard/notices/${citation.notice_id}`}
                                 >
-                                  <p className="font-medium">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-left"
+                                  >
                                     {citation.notice_title}
-                                    <span className="ml-2 font-mono text-muted-foreground">
-                                      #{citation.notice_id}
-                                    </span>
-                                  </p>
-                                  <p className="mt-1 text-muted-foreground italic">
-                                    “{citation.matching_passage}”
-                                  </p>
-                                </div>
+                                  </Badge>
+                                </Link>
                               ))}
                             </div>
                           ) : null}
@@ -251,14 +258,16 @@ function Chat() {
       ) : null}
 
       {suggestions.length > 0 && (
-        <div className="flex scroll-fade-x scrollbar-none gap-2 overflow-x-auto overscroll-x-contain">
-          {suggestions.map((suggestion) => (
+        <div className="flex scroll-fade-x scrollbar-none gap-2 overflow-x-auto overscroll-x-contain py-1">
+          {suggestions.map((suggestion, i) => (
             <Button
               key={suggestion}
               type="button"
               variant="outline"
               size="sm"
-              className="shrink-0"
+              className={`shrink-0 shadow-[2px_2px_0_color-mix(in_oklab,var(--foreground)_10%,transparent)] transition-transform hover:-translate-y-0.5 ${
+                i % 2 === 0 ? "rotate-[-0.6deg]" : "rotate-[0.6deg]"
+              }`}
               onClick={() => void send(suggestion)}
               disabled={isPending}
             >
