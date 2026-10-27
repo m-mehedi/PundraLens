@@ -5,6 +5,9 @@ Notice intelligence for Pundra University. PundraLens turns university notices
 structured, searchable, citable data: deadlines, fees, venues, and answers
 grounded in the source text.
 
+
+Demo Video link: (Will be published as soon as possible before the deadline)
+
 ## Layout
 
 | Path | What it is | Stack |
@@ -35,8 +38,6 @@ DATALAB_API_KEY="your-datalab-api-key"  # optional; Gemini vision OCR is the fal
 
 ```bash
 uv run uvicorn api:app --reload --port 8000   # REST API
-uv run streamlit run ui.py                    # Streamlit portal on :8501
-uv run pytest -v                              # test suite
 ```
 
 ### Frontend
