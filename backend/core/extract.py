@@ -9,12 +9,9 @@ from core.schema import ExtractionSchema
 
 MODEL = os.getenv("EXTRACTION_MODEL", "gemini-3.5-flash-lite")
 MAX_RETRIES = 3
-RETRY_DELAY_SECONDS = 2
 
-# Rate limiting: stay under the API's requests-per-minute cap.
-# RPM=15 -> 60/15 = 4.0s minimum, plus a small margin for timing jitter/retries.
-RPM_LIMIT = int(os.getenv("EXTRACTION_RPM_LIMIT", "15"))
-SECONDS_BETWEEN_REQUESTS = (60.0 / RPM_LIMIT) + 0.5
+# Rate limiting disabled to improve API throughput.
+SECONDS_BETWEEN_REQUESTS = 0
 
 SYSTEM_PROMPT = """You extract structured data from notices issued by Pundra University of \
 Science & Technology (পুণ্ড্র ইউনিভার্সিটি অব সায়েন্স অ্যান্ড টেকনোলজি).
@@ -73,15 +70,10 @@ class Extractor:
                 self._last_request_at = time.perf_counter()
                 last_error = e
                 message = str(e).lower()
-                is_rate_limit = "429" in message or "rate" in message or "quota" in message
-                delay = RETRY_DELAY_SECONDS * attempt * (3 if is_rate_limit else 1)
                 if attempt < MAX_RETRIES:
                     print(
-                        f"    ⚠ Attempt {attempt}/{MAX_RETRIES} failed "
-                        f"({'rate limit' if is_rate_limit else 'error'}): {e}"
+                        f"    ⚠ Attempt {attempt}/{MAX_RETRIES} failed: {e}. Retrying..."
                     )
-                    print(f"    ⏳ Waiting {delay:.0f}s before retry...")
-                    time.sleep(delay)
         raise ExtractionFailure(f"Extraction failed after {MAX_RETRIES} attempts: {last_error}")
 
     def extract(self, text: str) -> ExtractionSchema:
