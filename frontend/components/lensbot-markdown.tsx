@@ -1,10 +1,7 @@
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
-import {
-  CodeBlock,
-  CodeBlockContent,
-} from "@/components/ui/code-block"
+import { CodeBlock, CodeBlockContent } from "@/components/ui/code-block"
 
 export function MarkdownContent({ children }: { children: string }) {
   return (
@@ -23,7 +20,7 @@ export function MarkdownContent({ children }: { children: string }) {
             )
           }
           return (
-            <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono">
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
               {children}
             </code>
           )
@@ -50,21 +47,21 @@ export function MarkdownContent({ children }: { children: string }) {
         // Headings
         h1({ children, ...props }) {
           return (
-            <h1 className="text-base font-semibold mt-2 mb-1" {...props}>
+            <h1 className="mt-2 mb-1 text-base font-semibold" {...props}>
               {children}
             </h1>
           )
         },
         h2({ children, ...props }) {
           return (
-            <h2 className="text-sm font-semibold mt-2 mb-1" {...props}>
+            <h2 className="mt-2 mb-1 text-sm font-semibold" {...props}>
               {children}
             </h2>
           )
         },
         h3({ children, ...props }) {
           return (
-            <h3 className="text-sm font-semibold mt-1.5 mb-0.5" {...props}>
+            <h3 className="mt-1.5 mb-0.5 text-sm font-semibold" {...props}>
               {children}
             </h3>
           )
@@ -72,14 +69,14 @@ export function MarkdownContent({ children }: { children: string }) {
         // Lists
         ul({ children, ...props }) {
           return (
-            <ul className="list-inside list-disc pl-2 my-1" {...props}>
+            <ul className="my-1 list-inside list-disc pl-2" {...props}>
               {children}
             </ul>
           )
         },
         ol({ children, ...props }) {
           return (
-            <ol className="list-inside list-decimal pl-2 my-1" {...props}>
+            <ol className="my-1 list-inside list-decimal pl-2" {...props}>
               {children}
             </ol>
           )
@@ -95,7 +92,7 @@ export function MarkdownContent({ children }: { children: string }) {
         blockquote({ children, ...props }) {
           return (
             <blockquote
-              className="border-l-2 border-muted-foreground/30 pl-3 italic text-muted-foreground my-1"
+              className="my-1 border-l-2 border-muted-foreground/30 pl-3 text-muted-foreground italic"
               {...props}
             >
               {children}
@@ -106,10 +103,7 @@ export function MarkdownContent({ children }: { children: string }) {
         table({ children, ...props }) {
           return (
             <div className="my-2 overflow-x-auto">
-              <table
-                className="w-full border-collapse text-sm"
-                {...props}
-              >
+              <table className="w-full border-collapse text-sm" {...props}>
                 {children}
               </table>
             </div>
@@ -117,7 +111,10 @@ export function MarkdownContent({ children }: { children: string }) {
         },
         th({ children, ...props }) {
           return (
-            <th className="border border-muted px-2 py-1 bg-muted/50 font-medium text-left" {...props}>
+            <th
+              className="border border-muted bg-muted/50 px-2 py-1 text-left font-medium"
+              {...props}
+            >
               {children}
             </th>
           )
@@ -139,7 +136,7 @@ export function MarkdownContent({ children }: { children: string }) {
         },
         // Horizontal rules
         hr({ ...props }) {
-          return <hr className="border-muted my-2" {...props} />
+          return <hr className="my-2 border-muted" {...props} />
         },
       }}
     >

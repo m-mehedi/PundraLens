@@ -32,7 +32,7 @@ export default async function NoticesPage({
   const department = first("department")
   const search = first("q")
 
-  const [{ notices }, departments] = await Promise.all([
+  const [{ count, notices }, departments] = await Promise.all([
     listNotices({
       status: status as "published" | "draft" | "archived" | "all",
       category,
@@ -45,7 +45,11 @@ export default async function NoticesPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <NoticeFilters departments={departments} />
+      <NoticeFilters
+        departments={departments}
+        count={count}
+        shown={notices.length}
+      />
 
       <NoticeList notices={notices} />
     </div>

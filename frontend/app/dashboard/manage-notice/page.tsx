@@ -2,8 +2,7 @@ import { requireRole } from "@/lib/auth-guard"
 import { listNotices } from "@/lib/backend-server"
 import { listDepartments } from "@/lib/notice-lookups"
 import { deleteNoticeAction, publishNoticeAction } from "@/lib/notice-actions"
-import { NoticeFilters } from "@/components/dashboard/notice-filters"
-import { NoticeTable } from "@/components/dashboard/notice-table"
+import { ManageNotices } from "@/components/dashboard/manage-notices"
 
 export const dynamic = "force-dynamic"
 
@@ -25,7 +24,7 @@ export default async function ManageNoticePage({
   const department = first("department")
   const search = first("q")
 
-  const [{ notices }, departments] = await Promise.all([
+  const [{ count, notices }, departments] = await Promise.all([
     listNotices({
       status: status as "published" | "draft" | "archived" | "all",
       category,
@@ -42,15 +41,13 @@ export default async function ManageNoticePage({
     "Staff Reviewer"
 
   return (
-    <div className="flex flex-col gap-6">
-      <NoticeFilters departments={departments} showStatus />
-
-      <NoticeTable
-        notices={notices}
-        publishAction={publishNoticeAction}
-        deleteAction={deleteNoticeAction}
-        publishedBy={publishedBy}
-      />
-    </div>
+    <ManageNotices
+      notices={notices}
+      count={count}
+      departments={departments}
+      publishAction={publishNoticeAction}
+      deleteAction={deleteNoticeAction}
+      publishedBy={publishedBy}
+    />
   )
 }

@@ -66,9 +66,7 @@ export function ReviewPanel({
             {isResultStale ? (
               <Alert>
                 <HugeiconsIcon icon={Alert02Icon} />
-                <AlertTitle>
-                  The photo changed after this extraction
-                </AlertTitle>
+                <AlertTitle>The photo changed after this extraction</AlertTitle>
                 <AlertDescription className="flex flex-wrap items-center gap-3">
                   <span>
                     The fields below describe the previous photo. Extract again

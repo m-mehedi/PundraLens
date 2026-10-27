@@ -38,7 +38,10 @@ export function PipelineStepper({
           const isLast = index === steps.length - 1
 
           return (
-            <li key={step.id} className={cn("flex items-center", !isLast && "flex-1")}>
+            <li
+              key={step.id}
+              className={cn("flex items-center", !isLast && "flex-1")}
+            >
               <button
                 type="button"
                 onClick={() => onStepClick(step.id)}
@@ -90,7 +93,7 @@ export function PipelineStepper({
               </button>
 
               {!isLast && (
-                <div className="mx-3 h-0.5 flex-1 rounded-full bg-muted overflow-hidden">
+                <div className="mx-3 h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
                   <motion.div
                     className={cn(
                       "h-full rounded-full",

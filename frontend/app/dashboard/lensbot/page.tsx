@@ -218,7 +218,11 @@ function Chat() {
                                   : "shadow-[2px_2px_0_color-mix(in_oklab,var(--foreground)_10%,transparent)]"
                               }
                             >
-                              {isUser ? text : <MarkdownContent>{text}</MarkdownContent>}
+                              {isUser ? (
+                                text
+                              ) : (
+                                <MarkdownContent>{text}</MarkdownContent>
+                              )}
                             </BubbleContent>
                           </Bubble>
 

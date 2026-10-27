@@ -517,10 +517,7 @@ export function UploadNoticeWorkbench({
                       ? "Text is ready to be extracted."
                       : `${items.length} page${items.length === 1 ? "" : "s"} ready.`}
                   </p>
-                  <Button
-                    onClick={() => goToStep(2)}
-                    disabled={isExtracting}
-                  >
+                  <Button onClick={() => goToStep(2)} disabled={isExtracting}>
                     Continue to Extract
                     <HugeiconsIcon
                       icon={ArrowRight01Icon}

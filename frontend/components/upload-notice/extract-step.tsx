@@ -169,7 +169,10 @@ export function ExtractStep({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
               Choose a file
             </Button>
           </EmptyContent>
