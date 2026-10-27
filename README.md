@@ -6,7 +6,7 @@ structured, searchable, citable data: deadlines, fees, venues, and answers
 grounded in the source text.
 
 
-⚠️ Demo Video link: (Will be published as soon as possible before the deadline)
+⚠️ Demo Video link: [YouTube Link](https://youtu.be/Kji3j6FJ72s)
 
 ## Layout
 
